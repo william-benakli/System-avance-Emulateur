@@ -111,7 +111,7 @@ void execute(nibble data) {
         case 0xA: // ANNN: Set I to NNN
             chip8.index_register = data.nnn;
             break;
-        case 0xD: // DXYN: Draw sprite
+        case 0xD: { // DXYN: Draw sprite
             uint8_t x = chip8.V[data.x] % 64; // Set the X coordinate to the value in VX modulo 64 (or, equivalently, VX & 63, where & is the binary AND operation)
             uint8_t y = chip8.V[data.y] % 32; // Set the Y coordinate to the value in VY modulo 32 (or VY & 31)
             chip8.V[0xF] = 0; // Set VF to 0
@@ -140,6 +140,7 @@ void execute(nibble data) {
             }
             printGraphics(chip8.display);
             break;
+        }
         default:
             fprintf(stderr, "Unhandled operation: %04X\n", data.opcode);
             exit(EXIT_FAILURE);
