@@ -1,4 +1,4 @@
-#include "main.h"
+#include "emulator.h"
 #include "chip8.h"
 
 #include <stdio.h>
@@ -24,9 +24,9 @@ void update(double delta) {
 int main(int argc, char **argv) {
     if (argc != 2) {
         printf("Usage: %s <rom>\n", argv[0]);
-        return 1;
+        return EXIT_FAILURE;
     }
-    initialize();
+    initializeChip8();
     load_rom(argv[1]);
     float delta = 0.0;
     while (true) {
@@ -36,5 +36,5 @@ int main(int argc, char **argv) {
         clock_gettime(4, &end);
         delta = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1000000000.0;
     }
-    return 0;
+    return EXIT_SUCCESS;
 }

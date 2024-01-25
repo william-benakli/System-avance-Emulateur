@@ -1,5 +1,5 @@
-#ifndef MAIN_H
-#define MAIN_H
+#ifndef EMULATOR_H
+#define EMULATOR_H
 
 #include <stdint.h>
 

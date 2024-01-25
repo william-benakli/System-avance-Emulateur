@@ -6,7 +6,7 @@
 #define STACK_SIZE 100
 
 struct stack {
-    uint16_t* data;
+    uint16_t data[STACK_SIZE];
     int size;
 };
 typedef struct stack stack;

@@ -34,7 +34,7 @@ struct nibble {
 };
 typedef struct nibble nibble;
 
-void initialize();
+void initializeChip8();
 void load_rom(char *path);
 uint16_t fetch();
 struct nibble decode(uint16_t opcode);

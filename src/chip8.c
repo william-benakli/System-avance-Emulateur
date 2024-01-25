@@ -1,5 +1,4 @@
 #include "chip8.h"
-#include "instructions.h"
 #include "util.h"
 
 #include <errno.h>
@@ -12,7 +11,7 @@
 
 struct Chip8 chip8;
 
-void initialize() {
+void initializeChip8() {
     uint8_t font[5 * 16] = {
         0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
         0x20, 0x60, 0x20, 0x20, 0x70, // 1
@@ -42,19 +41,16 @@ void load_rom(char *path) {
         exit(EXIT_FAILURE);
     }
     struct stat st;
-    int s = fstat(fd, &st);
-    if (s == -1) {
+    if (fstat(fd, &st) == -1) {
         perror("Failed to stat rom file");
         exit(EXIT_FAILURE);
     }
 
-    ssize_t bytes_read = read(fd, chip8.memory + ROM_START, st.st_size);
-    if (bytes_read == -1) {
+    if (read(fd, chip8.memory + ROM_START, st.st_size) == -1) {
         perror("Failed to read rom file");
         exit(EXIT_FAILURE);
     }
-    int c = close(fd);
-    if (c == -1) {
+    if (close(fd) == -1) {
         perror("Failed to close rom file");
         exit(EXIT_FAILURE);
     }

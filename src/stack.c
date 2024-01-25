@@ -1,10 +1,10 @@
 #include "stack.h"
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 void stack_init(stack* s) {
-    s->data = malloc(STACK_SIZE * sizeof(uint16_t));
     s->size = 0;
 }
 
@@ -12,14 +12,16 @@ void stack_push(stack* s, uint16_t value) {
     s->data[s->size] = value;
     s->size++;
     if (s->size >= STACK_SIZE) {
-        perror("Stack overflow!\n");
+        errno = EOVERFLOW;
+        perror("Stack overflow");
         exit(EXIT_FAILURE);
     }
 }
 
 uint16_t stack_pop(stack* s) {
     if (s->size == 0) {
-        perror("Stack underflow!\n");
+        errno = EINVAL;
+        perror("Stack underflow");
         exit(EXIT_FAILURE);
     }
 
