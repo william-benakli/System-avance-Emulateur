@@ -6,23 +6,13 @@
 
 void printGraphics(bool display[]) {
     system("clear");
-    /* char* displayStr = malloc(DISPLAY_WIDTH * DISPLAY_HEIGHT + DISPLAY_HEIGHT);
-    int offset = 0;
+    char displayStr[DISPLAY_WIDTH * DISPLAY_HEIGHT + DISPLAY_HEIGHT];
     for (int i = 0; i < DISPLAY_WIDTH * DISPLAY_HEIGHT; i++) {
-        int index = i + offset;
+        int index = i + i / DISPLAY_WIDTH;
         displayStr[index] = display[i] ? '#' : '.';
-        if (i != 0 && i % DISPLAY_WIDTH == 0) {
+        if ((i + 1) % DISPLAY_WIDTH == 0) {
             displayStr[index + 1] = '\n';
-            offset++;
         }
     }
     printf("%s", displayStr);
-    free(displayStr); */
-    
-    for (int y = 0; y < DISPLAY_HEIGHT; y++) {
-        for (int x = 0; x < DISPLAY_WIDTH; x++) {
-            printf("%c ", display[y * DISPLAY_WIDTH + x] ? '#' : '.');
-        }
-        printf("\n");
-    }
 }
