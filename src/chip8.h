@@ -9,6 +9,7 @@
 #define DISPLAY_WIDTH 64
 #define DISPLAY_HEIGHT 32
 #define MEMORY_SIZE 4 * 1024
+#define FONT_START 0x50
 #define ROM_START 0x200
 
 struct Chip8 {

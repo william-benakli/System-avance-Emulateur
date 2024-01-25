@@ -31,9 +31,9 @@ int main(int argc, char **argv) {
     float delta = 0.0;
     while (true) {
         struct timespec start, end;
-        clock_gettime(CLOCK_MONOTONIC_RAW, &start);
+        clock_gettime(4, &start);
         update(delta);
-        clock_gettime(CLOCK_MONOTONIC_RAW, &end);
+        clock_gettime(4, &end);
         delta = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1000000000.0;
     }
     return 0;
