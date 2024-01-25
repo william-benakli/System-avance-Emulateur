@@ -4,11 +4,15 @@ BIN=bin
 
 .PHONY: all clean
 
-all: $(BIN)/main
+all: $(BIN)/emulator $(BIN)/disassembler
 
-$(BIN)/main: $(SRC)/main.c $(SRC)/chip8.c $(SRC)/instructions.c $(SRC)/stack.c $(SRC)/util.c
+$(BIN)/emulator: $(SRC)/emulator.c $(SRC)/chip8.c $(SRC)/stack.c $(SRC)/util.c
 	mkdir -p $(@D)
-	$(GCC) $(SRC)/util.c $(SRC)/stack.c $(SRC)/instructions.c $(SRC)/chip8.c $(SRC)/main.c -o $(BIN)/main
+	$(GCC) $^ -o $@
+
+$(BIN)/disassembler: $(SRC)/disassembler.c $(SRC)/chip8.c $(SRC)/stack.c $(SRC)/util.c
+	mkdir -p $(@D)
+	$(GCC) $^ -o $@
 
 clean:
 	rm -f $(BIN)/*
