@@ -8,9 +8,13 @@
 
 #define DISPLAY_WIDTH 64
 #define DISPLAY_HEIGHT 32
+
 #define MEMORY_SIZE 4 * 1024
 #define FONT_START 0x50
 #define ROM_START 0x200
+
+#define CLOCK_SPEED 500 // 500 Hz
+#define FRAMERATE 60 // 60 Hz
 
 struct Chip8 {
     uint8_t memory[MEMORY_SIZE]; // Memory: CHIP-8 has direct access to up to 4 kilobytes of RAM

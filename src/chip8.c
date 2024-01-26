@@ -99,7 +99,7 @@ void execute(nibble data) {
                 for (int i = 0; i < DISPLAY_WIDTH * DISPLAY_HEIGHT; i++) {
                     chip8.display[i] = false;
                 }
-                printGraphics(chip8.display);
+                // printGraphics(chip8.display);
             }
             break;
         case 0x1: // 1NNN: Jump
@@ -144,7 +144,7 @@ void execute(nibble data) {
                     break;
                 } */
             }
-            printGraphics(chip8.display);
+            // printGraphics(chip8.display);
             break;
         }
         default:

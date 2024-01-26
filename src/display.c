@@ -21,6 +21,17 @@ void initializeDisplay(void) {
     }
 }
 
+void handleInput() {
+    SDL_Event event;
+    if (SDL_PollEvent(&event) == 0) {
+        return;
+    }
+    if (event.type == SDL_QUIT) {
+        closeDisplay();
+        exit(EXIT_SUCCESS);
+    }
+}
+
 void refreshFrame() {
     bool display[DISPLAY_WIDTH * DISPLAY_HEIGHT];
     get_display(display);

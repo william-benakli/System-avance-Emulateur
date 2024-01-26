@@ -9,6 +9,7 @@ SDL_Window *window;
 SDL_Renderer *renderer;
 
 void initializeDisplay();
+void handleInput();
 void refreshFrame();
 void closeDisplay();
 

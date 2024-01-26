@@ -20,12 +20,13 @@ void update(double delta) {
     bufferTime += delta;
     bufferTime2 += delta;
     // update every 1/60th of a second
-    if (bufferTime >= 1. / 60.) {
+    if (bufferTime >= 1. / FRAMERATE) {
         bufferTime = 0.0f;
+        handleInput();
         refreshFrame();
     }
     // update every 1/500th of a second
-    if (bufferTime2 >= 1. / 500.) {
+    if (bufferTime2 >= 1. / CLOCK_SPEED) {
         bufferTime2 = 0.0f;
         clock_cycle();
     }
