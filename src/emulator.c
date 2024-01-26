@@ -1,24 +1,34 @@
 #include "emulator.h"
 #include "chip8.h"
+#include "display.h"
 
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
 double bufferTime = 0.0f;
+double bufferTime2 = 0.0f;
+
+void signalHandler(int signal) {
+    closeDisplay();
+    exit(EXIT_SUCCESS);
+}
 
 void update(double delta) {
     bufferTime += delta;
+    bufferTime2 += delta;
     // update every 1/60th of a second
-    if (bufferTime < 1. / 500.) {
-        return;
+    if (bufferTime >= 1. / 60.) {
+        bufferTime = 0.0f;
+        refreshFrame();
     }
-    bufferTime = 0.0f;
-
-    uint16_t opcode = fetch();
-    struct nibble data = decode(opcode);
-    execute(data);
+    // update every 1/500th of a second
+    if (bufferTime2 >= 1. / 500.) {
+        bufferTime2 = 0.0f;
+        clock_cycle();
+    }
 }
 
 int main(int argc, char **argv) {
@@ -27,6 +37,8 @@ int main(int argc, char **argv) {
         return EXIT_FAILURE;
     }
     initializeChip8();
+    initializeDisplay();
+    signal(SIGINT, signalHandler);
     load_rom(argv[1]);
     float delta = 0.0;
     while (true) {

@@ -36,6 +36,8 @@ typedef struct nibble nibble;
 
 void initializeChip8();
 void load_rom(char *path);
+void get_display(bool dest[DISPLAY_WIDTH * DISPLAY_HEIGHT]);
+void clock_cycle();
 uint16_t fetch();
 struct nibble decode(uint16_t opcode);
 void execute(struct nibble data);

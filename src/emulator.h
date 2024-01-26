@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 
+void signalHandler(int signal);
 void update(double delta);
 int main(int argc, char **argv);
 

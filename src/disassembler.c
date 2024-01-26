@@ -75,30 +75,37 @@ int main(int argc, char **argv) {
     int asm_fd = open(asm_filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (asm_fd == -1) {
         perror("Error opening log file");
-        exit(EXIT_FAILURE);
+        return EXIT_FAILURE;
     }
     int rom_fd = open(argv[1], O_RDONLY);
     if (rom_fd == -1) {
+        close(asm_fd);
         perror("Error opening ROM file");
-        exit(EXIT_FAILURE);
+        return EXIT_FAILURE;
     }
 
     struct stat st;
     if (fstat(rom_fd, &st) == -1) {
+        close(asm_fd);
+        close(rom_fd);
         perror("Error getting log file stats");
-        exit(EXIT_FAILURE);
+        return EXIT_FAILURE;
     }
     int offset = 0;
     while (offset < st.st_size) {
         uint16_t opcode;
         uint8_t highByte, lowByte;
         if (read(rom_fd, &highByte, sizeof(uint8_t)) == -1) {
+            close(asm_fd);
+            close(rom_fd);
             perror("Error reading log file");
-            exit(EXIT_FAILURE);
+            return EXIT_FAILURE;
         }
         if (read(rom_fd, &lowByte, sizeof(uint8_t)) == -1) {
+            close(asm_fd);
+            close(rom_fd);
             perror("Error reading log file");
-            exit(EXIT_FAILURE);
+            return EXIT_FAILURE;
         }
         opcode = (highByte << 8) | lowByte;
 
@@ -108,8 +115,12 @@ int main(int argc, char **argv) {
         offset += 2;
     }
     if (close(asm_fd) == -1) {
-        perror("Error closing log file");
-        exit(EXIT_FAILURE);
+        perror("Error closing asm file");
+        return EXIT_FAILURE;
+    }
+    if (close(rom_fd) == -1) {
+        perror("Error closing rom file");
+        return EXIT_FAILURE;
     }
     printf("Disassembled ROM to %s\n", asm_filename);
     return EXIT_SUCCESS;

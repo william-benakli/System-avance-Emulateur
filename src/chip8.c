@@ -60,6 +60,16 @@ void load_rom(char *path) {
 
 }
 
+void get_display(bool dest[DISPLAY_WIDTH * DISPLAY_HEIGHT]) {
+    memcpy(dest, chip8.display, sizeof(chip8.display));
+}
+
+void clock_cycle() {
+    uint16_t opcode = fetch();
+    nibble data = decode(opcode);
+    execute(data);
+}
+
 uint16_t fetch() {
     uint8_t highByte, lowByte;
     memcpy(&highByte, chip8.memory + chip8.program_counter, sizeof(uint8_t));
@@ -118,7 +128,7 @@ void execute(nibble data) {
                 get_bits_from_byte(pixels, pixelsBitsRow);
                 for (int col = 0; col < 8; col++) { // For each of the 8 pixels/bits in this sprite row (from left to right, ie. from most to least significant bit):
                     if (pixelsBitsRow[col]) { // bit is 1
-                        int coord = (y + row) * DISPLAY_WIDTH + (x + col);
+                        int coord = (y + row) * DISPLAY_WIDTH + x + col;
                         if (chip8.display[coord]) { // If the current pixel in the sprite row is on and the pixel at coordinates X,Y on the screen is also on, turn off the pixel and set VF to 1
                             chip8.display[coord] = false;
                             chip8.V[0xF] = 1;
