@@ -151,7 +151,7 @@ void execute(nibble data) {
             break;
         }
         case 0xE:{ // EX9E: Skip next instruction if key with the value of VX is pressed
-            if (data.nnn == 0xEX9E){
+            if (data.nn == 0x9E){
                 if (chip8.keypad[chip8.V[data.x]]) {
                 chip8.program_counter += 2;
                 }
