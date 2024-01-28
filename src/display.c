@@ -2,13 +2,23 @@
 
 #include <stdio.h>
 
+#define WINDOW_NAME "CHIP-8 Emulator"
+
+#define SCALING 4
+
+#define PRIMARY_COLOR 255, 255, 255, 255 
+#define SECONDARY_COLOR 0, 0, 0, 255
+
+SDL_Window *window;
+SDL_Renderer *renderer;
+
 void initializeDisplay(void) {
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
 		fprintf(stderr, "Couldn't initialize SDL: %s\n", SDL_GetError());
 		exit(EXIT_FAILURE);
 	}
 
-    window = SDL_CreateWindow("Chip8 Emulator", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, DISPLAY_WIDTH * SCALING, DISPLAY_HEIGHT * SCALING, SDL_WINDOW_SHOWN);
+    window = SDL_CreateWindow(WINDOW_NAME, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, DISPLAY_WIDTH * SCALING, DISPLAY_HEIGHT * SCALING, SDL_WINDOW_SHOWN);
     if(NULL == window) {
         fprintf(stderr, "Erreur SDL_CreateWindow : %s", SDL_GetError());
         exit(EXIT_FAILURE);
@@ -49,8 +59,9 @@ void refreshFrame() {
     }
     for (int i = 0; i < DISPLAY_WIDTH * DISPLAY_HEIGHT; i++) {
         if (display[i]) {
-            if (SDL_RenderDrawPoint(renderer, i % DISPLAY_WIDTH * SCALING, i / DISPLAY_WIDTH * SCALING) == -1) {
-                fprintf(stderr, "Erreur SDL_RenderDrawPoint : %s", SDL_GetError());
+            SDL_Rect rect = {i % DISPLAY_WIDTH * SCALING, i / DISPLAY_WIDTH * SCALING, SCALING, SCALING};
+            if (SDL_RenderFillRect(renderer, &rect) == -1) {
+                fprintf(stderr, "Erreur SDL_RenderFillRect : %s", SDL_GetError());
                 closeDisplay();
                 exit(EXIT_FAILURE);
             }

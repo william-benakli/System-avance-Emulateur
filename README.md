@@ -1,5 +1,8 @@
 # System-avance-Emulateur
 
+Pour installer les dépendances :
+```sudo apt install libsdl2-dev```
+
 Pour compiler le projet :
 ```make```
 
