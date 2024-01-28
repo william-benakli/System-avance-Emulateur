@@ -164,9 +164,11 @@ void execute(nibble data) {
             break;
             }
         case 0xF: // FX33: Store BCD representation of VX in memory locations I, I+1, and I+2
+            if(data.nn == 0x33){
             chip8.memory[chip8.index_register] = chip8.V[data.x] / 100;
             chip8.memory[chip8.index_register + 1] = (chip8.V[data.x] / 10) % 10;
             chip8.memory[chip8.index_register + 2] = chip8.V[data.x] % 10;
+            }
             break;
         default:
             errno = EINVAL;
