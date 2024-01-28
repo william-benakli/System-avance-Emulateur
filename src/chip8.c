@@ -118,6 +118,9 @@ void execute(nibble data) {
         case 0xA: // ANNN: Set I to NNN
             chip8.index_register = data.nnn;
             break;
+        case 0xB: // BNNN: Jumps to the adress NNN + V0
+            chip8.program_counter = data.nnn + chip8.V[0];
+            break;
         case 0xD: { // DXYN: Draw sprite
             uint8_t x = chip8.V[data.x] % 64; // Set the X coordinate to the value in VX modulo 64 (or, equivalently, VX & 63, where & is the binary AND operation)
             uint8_t y = chip8.V[data.y] % 32; // Set the Y coordinate to the value in VY modulo 32 (or VY & 31)
@@ -147,11 +150,18 @@ void execute(nibble data) {
             // printGraphics(chip8.display);
             break;
         }
-        case 0xE: // EX9E: Skip next instruction if key with the value of VX is pressed
-            if (chip8.keypad[chip8.V[data.x]]) {
+        case 0xE:{ // EX9E: Skip next instruction if key with the value of VX is pressed
+            if (data.nnn == 0xEX9E){
+                if (chip8.keypad[chip8.V[data.x]]) {
+                chip8.program_counter += 2;
+                }
+            else {
+                if !(chip8.keypad[chip8.V[data.x]]) {
                 chip8.program_counter += 2;
             }
+            }
             break;
+            }
         case 0xF: // FX33: Store BCD representation of VX in memory locations I, I+1, and I+2
             chip8.memory[chip8.index_register] = chip8.V[data.x] / 100;
             chip8.memory[chip8.index_register + 1] = (chip8.V[data.x] / 10) % 10;
