@@ -155,6 +155,7 @@ void execute(nibble data) {
                 if (chip8.keypad[chip8.V[data.x]]) {
                 chip8.program_counter += 2;
                 }
+            }
             else {
                 if !(chip8.keypad[chip8.V[data.x]]) {
                 chip8.program_counter += 2;
