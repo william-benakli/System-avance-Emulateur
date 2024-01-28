@@ -150,21 +150,21 @@ void execute(nibble data) {
             // printGraphics(chip8.display);
             break;
         }
-        case 0xE:{ // EX9E: Skip next instruction if key with the value of VX is pressed
-            if (data.nn == 0x9E){
+        case 0xE:{ 
+            if (data.nn == 0x9E){ // EX9E: Skip next instruction if key with the value of VX is pressed
                 if (chip8.keypad[chip8.V[data.x]]) {
                 chip8.program_counter += 2;
                 }
             }
-            else {
+            else {//EXA1: Skip next instruction if key with the value of VX isn't pressed
                 if !(chip8.keypad[chip8.V[data.x]]) {
                 chip8.program_counter += 2;
             }
             }
             break;
             }
-        case 0xF: // FX33: Store BCD representation of VX in memory locations I, I+1, and I+2
-            if(data.nn == 0x33){
+        case 0xF: 
+            if(data.nn == 0x33){ // FX33: Store BCD representation of VX in memory locations I, I+1, and I+2
             chip8.memory[chip8.index_register] = chip8.V[data.x] / 100;
             chip8.memory[chip8.index_register + 1] = (chip8.V[data.x] / 10) % 10;
             chip8.memory[chip8.index_register + 2] = chip8.V[data.x] % 10;
