@@ -45,5 +45,7 @@ void clock_cycle();
 uint16_t fetch();
 struct nibble decode(uint16_t opcode);
 void execute(struct nibble data);
+void instruction8X(nibble * data);
+void instructionFX(nibble * data);
 
 #endif

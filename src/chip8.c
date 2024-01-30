@@ -109,6 +109,22 @@ void execute(nibble data) {
             stack_push(&chip8.stack, chip8.program_counter);
             chip8.program_counter = data.nnn;
             break; */
+        case 0x3:
+            //3XNN 	Cond 	if (Vx == NN) 	Skips the next instruction if VX equals NN (usually the next instruction is a jump to skip a code block).[13]
+            if (chip8.V[data.x] == data.t) {
+                /* TODO: skip next instruction*/
+            }
+        case 0x4:
+            /*4XNN 	Cond if (Vx != NN) 	Skips the next instruction if VX does not equal NN (usually the next instruction is a jump to skip a code block).[13]*/
+      
+        if (chip8.V[data.x] != data.t) {
+                /* TODO: skip next instruction*/
+            }
+        case 0x5:
+            /* 5XY0 Cond if (Vx == Vy) 	Skips the next instruction if VX equals VY (usually the next instruction is a jump to skip a code block).[13]*/
+          if (chip8.V[data.x] == chip8.V[data.y]) {
+                /* TODO: skip next instruction*/
+            }
         case 0x6: // 6XNN: Set VX to NN
             chip8.V[data.x] = data.nn;
             break;
@@ -121,6 +137,9 @@ void execute(nibble data) {
         case 0xB: // BNNN: Jumps to the adress NNN + V0
             chip8.program_counter = data.nnn + chip8.V[0];
             break;
+        case 0xC:
+            //CXNN Rand Vx = rand() & NN Sets VX to the result of a bitwise and operation on a random number (Typically: 0 to 255) and NN.[13]
+            chip8.V[data.x] = rand() & data.t;
         case 0xD: { // DXYN: Draw sprite
             uint8_t x = chip8.V[data.x] % 64; // Set the X coordinate to the value in VX modulo 64 (or, equivalently, VX & 63, where & is the binary AND operation)
             uint8_t y = chip8.V[data.y] % 32; // Set the Y coordinate to the value in VY modulo 32 (or VY & 31)
@@ -164,15 +183,111 @@ void execute(nibble data) {
             break;
             }*/
         case 0xF: 
-            if(data.nn == 0x33){ // FX33: Store BCD representation of VX in memory locations I, I+1, and I+2
-            chip8.memory[chip8.index_register] = chip8.V[data.x] / 100;
-            chip8.memory[chip8.index_register + 1] = (chip8.V[data.x] / 10) % 10;
-            chip8.memory[chip8.index_register + 2] = chip8.V[data.x] % 10;
+            instructionFX(&data);
+            break;
+        /* 8XY instructions **/
+        case 0x9:
+            /*9XY0 	Cond 	if (Vx != Vy) 	Skips the next instruction if VX does not equal VY. (Usually the next instruction is a jump to skip a code block).[13]*/
+            if (chip8.V[data.x] != chip8.V[data.y]) {
+                /* TODO: skip next instruction*/
             }
+            break;
+        case 0x8:
+            instruction8X(&data);
             break;
         default:
             errno = EINVAL;
             perror("Unknown opcode");
             exit(EXIT_FAILURE);
+    }
+}
+
+
+void instruction8X(nibble * data){
+           switch (data->n)
+            {
+            case 0:
+                //8XY0 	Assig 	Vx = Vy 	Sets VX to the value of VY.[13]
+                chip8.V[data->x] = data->y;
+                break;
+            case 0x1:
+                /* 8XY1 	BitOp 	Vx |= Vy 	Sets VX to VX or VY. (bitwise OR operation).[13]*/
+                chip8.V[data->x] |= data->y;
+                break;
+            case 0x2:
+                /*8XY2 	BitOp 	Vx &= Vy 	Sets VX to VX and VY. (bitwise AND operation).[13]*/
+                chip8.V[data->x] &= data->y;
+                break;
+            case 0x3:
+                /* 8XY3[a] 	BitOp 	Vx ^= Vy 	Sets VX to VX xor VY.[13] */
+                chip8.V[data->x] ^= data->y;
+                break;
+            case 0x4:
+                /* 8XY4 	Math 	Vx += Vy 	Adds VY to VX. VF is set to 1 when there's an overflow, and to 0 when there is not.[13] */
+                chip8.V[data->x] += data->y;
+                break;
+            case 0x5:
+                /* 8XY5 	Math 	Vx -= Vy 	VY is subtracted from VX. VF is set to 0 when there's an underflow, and 1 when there is not. (i.e. VF set to 1 if VX >= VY and 0 if not).[13]  */
+                chip8.V[data->x] -= data->y;
+                break;
+            case 0x6:
+                /* 8XY6[a] 	BitOp 	Vx >>= 1 	Stores the least significant bit of VX in VF and then shifts VX to the right by 1.[b][13] */
+                chip8.V[data->x] >>= 1;
+                break;
+            case 0x7:
+                /* 8XY7[a] 	Math 	Vx = Vy - Vx 	Sets VX to VY minus VX. VF is set to 0 when there's an underflow, and 1 when there is not. (i.e. VF set to 1 if VY >= VX).[13] */
+                chip8.V[data->x] = data->y - data->x;
+                break;
+            case 0xE:
+                /* 8XYE[a] 	BitOp 	Vx <<= 1 	Stores the most significant bit of VX in VF and then shifts VX to the left by 1.[b][13] */
+                chip8.V[data->x] <<= 1;
+                break;
+            default:
+                break;
+            }
+}
+
+void instructionFX(nibble * data){
+    switch (data->nn)
+    {
+    case 0x7:
+        /* FX07 	Timer 	Vx = get_delay() 	Sets VX to the value of the delay timer.[13] */
+        chip8.V[data->x] = chip8.delay; 
+        break;
+    case 0xA:
+        /* FX0A 	KeyOp 	Vx = get_key() 	A key press is awaited, and then stored in VX (blocking operation, all instruction halted until next key event).[13] */
+        /* Ignored */
+        break;
+    case 0x15:
+        /* FX15 	Timer 	delay_timer(Vx) 	Sets the delay timer to VX.[13] */
+        chip8.delay = chip8.V[data->x];
+        break;
+    case 0x18:
+        /* FX18 	Sound 	sound_timer(Vx) 	Sets the sound timer to VX.[13] */
+        chip8.sound = chip8.V[data->x];
+        break;
+    case 0x1E:
+        /* FX1E 	MEM 	I += Vx 	Adds VX to I. VF is not affected.[c][13] */
+        chip8.index_register += chip8.V[data->x];
+        break;
+    case 0x29:
+        /* FX29 	MEM 	I = sprite_addr[Vx] 	Sets I to the location of the sprite for the character in VX. Characters 0-F (in hexadecimal) are represented by a 4x5 font.[13] */
+        chip8.index_register += chip8.V[data->x];
+
+        break;
+    case 0x33:
+        /* FX33 	BCD 	set_BCD(Vx) *(I+0) = BCD(3); *(I+1) = BCD(2); *(I+2) = BCD(1); Stores the binary-coded decimal representation of VX, with the hundreds digit in memory at location in I, the tens digit at location I+1, and the ones digit at location I+2.[13] */
+        chip8.memory[chip8.index_register] = chip8.V[data->x] / 100;
+        chip8.memory[chip8.index_register + 1] = (chip8.V[data->x] / 10) % 10;
+        chip8.memory[chip8.index_register + 2] = chip8.V[data->x] % 10; 
+        break;
+    case 0x55:
+        /* FX55 	MEM 	reg_dump(Vx, &I) 	Stores from V0 to VX (including VX) in memory, starting at address I. The offset from I is increased by 1 for each value written, but I itself is left unmodified.[d][13] */
+        break;
+    case 0x65:
+        /* FX65 	MEM 	reg_load(Vx, &I) 	Fills from V0 to VX (including VX) with values from memory, starting at address I. The offset from I is increased by 1 for each value read, but I itself is left unmodified.[d][13] */
+        break;
+    default:
+        break;
     }
 }
