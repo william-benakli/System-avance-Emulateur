@@ -109,27 +109,31 @@ void execute(nibble data) {
             stack_push(&chip8.stack, chip8.program_counter);
             chip8.program_counter = data.nnn;
             break; */
-        case 0x3:
-            //3XNN 	Cond 	if (Vx == NN) 	Skips the next instruction if VX equals NN (usually the next instruction is a jump to skip a code block).[13]
-            if (chip8.V[data.x] == data.t) {
-                /* TODO: skip next instruction*/
+        case 0x3: // 3XNN: Skip next instruction if VX == NN
+            if (chip8.V[data.x] == data.nn) {
+                chip8.program_counter += 2;
             }
-        case 0x4:
-            /*4XNN 	Cond if (Vx != NN) 	Skips the next instruction if VX does not equal NN (usually the next instruction is a jump to skip a code block).[13]*/
-      
-        if (chip8.V[data.x] != data.t) {
-                /* TODO: skip next instruction*/
+            break;
+        case 0x4: // 4XNN: Skip next instruction if VX != NN
+            if (chip8.V[data.x] != data.nn) {
+                chip8.program_counter += 2;
             }
-        case 0x5:
-            /* 5XY0 Cond if (Vx == Vy) 	Skips the next instruction if VX equals VY (usually the next instruction is a jump to skip a code block).[13]*/
-          if (chip8.V[data.x] == chip8.V[data.y]) {
-                /* TODO: skip next instruction*/
+            break;
+        case 0x5: // 5XY0: Skip next instruction if VX == VY
+            if (chip8.V[data.x] == chip8.V[data.y]) {
+                chip8.program_counter += 2;
             }
+            break;
         case 0x6: // 6XNN: Set VX to NN
             chip8.V[data.x] = data.nn;
             break;
         case 0x7: // 7XNN: Add NN to VX
             chip8.V[data.x] += data.nn;
+            break;
+        case 0x9:// 9XY0: Skip next instruction if VX != VY
+            if (chip8.V[data.x] != chip8.V[data.y]) {
+                chip8.program_counter += 2;
+            }
             break;
         case 0xA: // ANNN: Set I to NNN
             chip8.index_register = data.nnn;
