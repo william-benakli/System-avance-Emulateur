@@ -190,12 +190,6 @@ void execute(nibble data) {
             instructionFX(&data);
             break;
         /* 8XY instructions **/
-        case 0x9:
-            /*9XY0 	Cond 	if (Vx != Vy) 	Skips the next instruction if VX does not equal VY. (Usually the next instruction is a jump to skip a code block).[13]*/
-            if (chip8.V[data.x] != chip8.V[data.y]) {
-                /* TODO: skip next instruction*/
-            }
-            break;
         case 0x8:
             instruction8X(&data);
             break;
