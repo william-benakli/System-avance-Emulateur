@@ -93,6 +93,8 @@ nibble decode(uint16_t opcode) {
 
 void execute(nibble data) {
     // printf("Handling opcode: %04X...\n", data.opcode);
+    printf("Instruction demandé %d\n", data.t);
+
     switch (data.t) {
         case 0x0:
             if (data.nnn == 0x0E0) { // 00E0: Clear screen
@@ -105,10 +107,10 @@ void execute(nibble data) {
         case 0x1: // 1NNN: Jump
             chip8.program_counter = data.nnn;
             break;
-        /* case 0x2: // 2NNN: Call subroutine
+         case 0x2: // 2NNN: Call subroutine
             stack_push(&chip8.stack, chip8.program_counter);
             chip8.program_counter = data.nnn;
-            break; */
+            break; 
         case 0x3: // 3XNN: Skip next instruction if VX == NN
             if (chip8.V[data.x] == data.nn) {
                 chip8.program_counter += 2;
@@ -240,6 +242,7 @@ void instruction8X(nibble * data){
                 /* 8XYE[a] 	BitOp 	Vx <<= 1 	Stores the most significant bit of VX in VF and then shifts VX to the left by 1.[b][13] */
                 chip8.V[data->x] <<= 1;
                 break;
+            
             default:
                 break;
             }
@@ -281,10 +284,20 @@ void instructionFX(nibble * data){
         break;
     case 0x55:
         /* FX55 	MEM 	reg_dump(Vx, &I) 	Stores from V0 to VX (including VX) in memory, starting at address I. The offset from I is increased by 1 for each value written, but I itself is left unmodified.[d][13] */
+       for (size_t i = 0; chip8.V[i] != chip8.V[data->x]; i++)
+        {
+            chip8.memory[chip8.index_register] =  chip8.V[i];
+            chip8.index_register +=1;
+        }
         break;
     case 0x65:
         /* FX65 	MEM 	reg_load(Vx, &I) 	Fills from V0 to VX (including VX) with values from memory, starting at address I. The offset from I is increased by 1 for each value read, but I itself is left unmodified.[d][13] */
-        break;
+       for (size_t i = 0; chip8.V[i] != chip8.V[data->x]; i++)
+        {
+            chip8.V[i] = chip8.memory[chip8.index_register];
+            chip8.index_register +=1;
+        }        
+        break; 
     default:
         break;
     }
