@@ -175,19 +175,19 @@ void execute(nibble data) {
             // printGraphics(chip8.display);
             break;
         }
-        /*case 0xE:{ 
+       /* case 0xE:
             if (data.nn == 0x9E){ // EX9E: Skip next instruction if key with the value of VX is pressed
-                if (chip8.keypad[chip8.V[data.x]]) {
+               // if (chip8.keypad[chip8.V[data.x]]) {
                 chip8.program_counter += 2;
-                }
+               // }
             }
             else {//EXA1: Skip next instruction if key with the value of VX isn't pressed
-                if !(chip8.keypad[chip8.V[data.x]]) {
+               // if !(chip8.keypad[chip8.V[data.x]]) {
                 chip8.program_counter += 2;
-            }
+            //}
             }
             break;
-            }*/
+            */ 
         case 0xF: 
             instructionFX(&data);
             break;
@@ -208,27 +208,27 @@ void instruction8X(nibble * data){
             {
             case 0:
                 //8XY0 	Assig 	Vx = Vy 	Sets VX to the value of VY.[13]
-                chip8.V[data->x] = data->y;
+                chip8.V[data->x] = chip8.V[data->y];
                 break;
             case 0x1:
                 /* 8XY1 	BitOp 	Vx |= Vy 	Sets VX to VX or VY. (bitwise OR operation).[13]*/
-                chip8.V[data->x] |= data->y;
+                chip8.V[data->x] |= chip8.V[data->y];
                 break;
             case 0x2:
                 /*8XY2 	BitOp 	Vx &= Vy 	Sets VX to VX and VY. (bitwise AND operation).[13]*/
-                chip8.V[data->x] &= data->y;
+                chip8.V[data->x] &= chip8.V[data->y];
                 break;
             case 0x3:
                 /* 8XY3[a] 	BitOp 	Vx ^= Vy 	Sets VX to VX xor VY.[13] */
-                chip8.V[data->x] ^= data->y;
+                chip8.V[data->x] ^= chip8.V[data->y];
                 break;
             case 0x4:
                 /* 8XY4 	Math 	Vx += Vy 	Adds VY to VX. VF is set to 1 when there's an overflow, and to 0 when there is not.[13] */
-                chip8.V[data->x] += data->y;
+                chip8.V[data->x] += chip8.V[data->y];
                 break;
             case 0x5:
                 /* 8XY5 	Math 	Vx -= Vy 	VY is subtracted from VX. VF is set to 0 when there's an underflow, and 1 when there is not. (i.e. VF set to 1 if VX >= VY and 0 if not).[13]  */
-                chip8.V[data->x] -= data->y;
+                chip8.V[data->x] -= chip8.V[data->y];
                 break;
             case 0x6:
                 /* 8XY6[a] 	BitOp 	Vx >>= 1 	Stores the least significant bit of VX in VF and then shifts VX to the right by 1.[b][13] */
@@ -236,13 +236,12 @@ void instruction8X(nibble * data){
                 break;
             case 0x7:
                 /* 8XY7[a] 	Math 	Vx = Vy - Vx 	Sets VX to VY minus VX. VF is set to 0 when there's an underflow, and 1 when there is not. (i.e. VF set to 1 if VY >= VX).[13] */
-                chip8.V[data->x] = data->y - data->x;
+                chip8.V[data->x] = chip8.V[data->y] - chip8.V[data->x];
                 break;
             case 0xE:
                 /* 8XYE[a] 	BitOp 	Vx <<= 1 	Stores the most significant bit of VX in VF and then shifts VX to the left by 1.[b][13] */
                 chip8.V[data->x] <<= 1;
                 break;
-            
             default:
                 break;
             }
@@ -284,18 +283,22 @@ void instructionFX(nibble * data){
         break;
     case 0x55:
         /* FX55 	MEM 	reg_dump(Vx, &I) 	Stores from V0 to VX (including VX) in memory, starting at address I. The offset from I is increased by 1 for each value written, but I itself is left unmodified.[d][13] */
+        uint16_t offset = chip8.index_register;
+
        for (size_t i = 0; chip8.V[i] != chip8.V[data->x]; i++)
         {
-            chip8.memory[chip8.index_register] =  chip8.V[i];
-            chip8.index_register +=1;
+            chip8.memory[offset] =  chip8.V[i];
+            offset += 1;
         }
         break;
     case 0x65:
         /* FX65 	MEM 	reg_load(Vx, &I) 	Fills from V0 to VX (including VX) with values from memory, starting at address I. The offset from I is increased by 1 for each value read, but I itself is left unmodified.[d][13] */
+        offset = chip8.index_register;
+
        for (size_t i = 0; chip8.V[i] != chip8.V[data->x]; i++)
         {
-            chip8.V[i] = chip8.memory[chip8.index_register];
-            chip8.index_register +=1;
+            chip8.V[i] = chip8.memory[offset];
+            offset += 1;
         }        
         break; 
     default:
