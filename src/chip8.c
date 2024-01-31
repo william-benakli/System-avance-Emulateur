@@ -175,9 +175,9 @@ void execute(nibble data) {
             // printGraphics(chip8.display);
             break;
         }
-       /* case 0xE:
-            if (data.nn == 0x9E){ // EX9E: Skip next instruction if key with the value of VX is pressed
-               // if (chip8.keypad[chip8.V[data.x]]) {
+        case 0xE:
+            /*     if (data.nn == 0x9E){ // EX9E: Skip next instruction if key with the value of VX is pressed
+                 // if (chip8.keypad[chip8.V[data.x]]) {
                 chip8.program_counter += 2;
                // }
             }
@@ -185,9 +185,9 @@ void execute(nibble data) {
                // if !(chip8.keypad[chip8.V[data.x]]) {
                 chip8.program_counter += 2;
             //}
-            }
+            }*/
             break;
-            */ 
+             
         case 0xF: 
             instructionFX(&data);
             break;
