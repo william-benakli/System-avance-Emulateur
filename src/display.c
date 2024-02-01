@@ -11,6 +11,7 @@
 
 SDL_Window *window;
 SDL_Renderer *renderer;
+uint16_t pressed_keys;
 
 void initialize_display() {
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -32,7 +33,6 @@ void initialize_display() {
 }
 
 uint16_t handle_inputs() {
-    uint16_t keys = 0;
     SDL_Event event;
     if (SDL_PollEvent(&event) == 0) {
         return 0;
@@ -95,14 +95,16 @@ uint16_t handle_inputs() {
             default:
                 break;
         }
-        keys |= (event.type == SDL_KEYDOWN ? 1 : 0) << key_index;
+        pressed_keys |= (event.type == SDL_KEYDOWN ? 1 : 0) << (key_index);
     }
-    return keys;
+    return pressed_keys;
 }
 
 void refresh_frame() {
     bool display[DISPLAY_WIDTH * DISPLAY_HEIGHT * SCALING];
     get_display(display);
+
+    SDL_SetWindowSize(window, DISPLAY_WIDTH * SCALING, DISPLAY_HEIGHT * SCALING);
     
     if (SDL_SetRenderDrawColor(renderer, SECONDARY_COLOR) != 0) {
         fprintf(stderr, "Erreur SDL_SetRenderDrawColor : %s", SDL_GetError());
