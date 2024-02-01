@@ -12,7 +12,7 @@ double bufferTime = 0.0f;
 double bufferTime2 = 0.0f;
 
 void signalHandler(int signal) {
-    closeDisplay();
+    close_display();
     exit(EXIT_SUCCESS);
 }
 
@@ -23,8 +23,8 @@ void update(double delta) {
     if (bufferTime >= 1. / FRAMERATE) {
         bufferTime = 0.0f;
         clock_timers();
-        handleInput();
-        refreshFrame();
+        set_pressed_keys(handle_inputs());
+        refresh_frame();
     }
     // update every 1/500th of a second
     if (bufferTime2 >= 1. / CLOCK_SPEED) {
@@ -38,8 +38,8 @@ int main(int argc, char **argv) {
         printf("Usage: %s <rom>\n", argv[0]);
         return EXIT_FAILURE;
     }
-    initializeChip8();
-    initializeDisplay();
+    initialize_chip8();
+    initialize_display();
     signal(SIGINT, signalHandler);
     load_rom(argv[1]);
     float delta = 0.0;

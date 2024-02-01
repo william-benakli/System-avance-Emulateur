@@ -11,7 +11,7 @@
 
 struct Chip8 chip8;
 
-void initializeChip8() {
+void initialize_chip8() {
     uint8_t font[5 * 16] = {
         0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
         0x20, 0x60, 0x20, 0x20, 0x70, // 1
@@ -64,12 +64,17 @@ void get_display(bool dest[DISPLAY_WIDTH * DISPLAY_HEIGHT]) {
     memcpy(dest, chip8.display, sizeof(chip8.display));
 }
 
+void set_pressed_keys(uint16_t keys) {
+    chip8.pressed_keys = keys;
+}
+
 void clock_cycle() {
     uint16_t opcode = fetch();
     nibble data = decode(opcode);
     execute(data);
 }
 
+// Should be called every time the display get refreshed (60 Hz)
 void clock_timers() {
     if (chip8.delay > 0) {
         chip8.delay--;
@@ -98,6 +103,114 @@ nibble decode(uint16_t opcode) {
         .nnn = opcode & 0xFFF
     };
     return data;
+}
+
+
+
+void instruction8X(nibble data){
+    switch (data.n) {
+        case 0x0: // 8XY0: Sets VX to the value of VY
+            chip8.V[data.x] = chip8.V[data.y];
+            break;
+        case 0x1: // 8XY1: Sets VX to VX or VY. (bitwise OR operation)
+            chip8.V[data.x] |= chip8.V[data.y];
+            break;
+        case 0x2: // 8XY2: Sets VX to VX and VY. (bitwise AND operation)
+            chip8.V[data.x] &= chip8.V[data.y];
+            break;
+        case 0x3: // 8XY3: Sets VX to VX xor VY
+            chip8.V[data.x] ^= chip8.V[data.y];
+            break;
+        case 0x4: // 8XY4: Adds VY to VX. VF is set to 1 when there's an overflow, and to 0 when there is not
+            chip8.V[0xF] = chip8.V[data.x] + chip8.V[data.y] > 255 ? 1 : 0;
+            chip8.V[data.x] += chip8.V[data.y];
+            break;
+        case 0x5: // 8XY5: VY is subtracted from VX. VF is set to 0 when there's an underflow, and 1 when there is not. (i.e. VF set to 1 if VX >= VY and 0 if not)
+            chip8.V[0xF] = chip8.V[data.x] < chip8.V[data.y] ? 0 : 1;
+            chip8.V[data.x] -= chip8.V[data.y];
+            break;
+        case 0x6: // 8XY6: Stores the least significant bit of VX in VF and then shifts VX to the right by 1
+            chip8.V[0xF] = chip8.V[data.x] & 0x1;
+            chip8.V[data.x] >>= 1;
+            break;
+        case 0x7: // 8XY7: Sets VX to VY minus VX. VF is set to 0 when there's an underflow, and 1 when there is not. (i.e. VF set to 1 if VY >= VX)
+            chip8.V[0xF] = chip8.V[data.x] > chip8.V[data.y] ? 0 : 1;
+            chip8.V[data.x] = chip8.V[data.y] - chip8.V[data.x];
+            break;
+        case 0xE: // 8XYE: Stores the most significant bit of VX in VF and then shifts VX to the left by 1
+            chip8.V[0xF] = chip8.V[data.x] >> 7;
+            chip8.V[data.x] <<= 1;
+            break;
+        default:
+            errno = EINVAL;
+            fprintf(stderr, "Unknown opcode %04X\n", data.opcode);
+            exit(EXIT_FAILURE);
+        }
+}
+
+void instructionFX (nibble data) {
+    switch (data.nn) {
+        case 0x7: // FX07: Sets VX to the value of the delay timer
+            chip8.V[data.x] = chip8.delay; 
+            break;
+        case 0xA: // FX0A: A key press is awaited, and then stored in VX (blocking operation, all instruction halted until next key event)
+            if (chip8.last_pressed_key == 0 && chip8.pressed_keys != 0) { // on enregistre le dernier état des touches
+                printf("Detection d'input...\n");
+                chip8.last_pressed_key = chip8.pressed_keys;
+                chip8.pressed_keys_since = 0;
+                chip8.program_counter -= 2;
+                break;
+            } else if (chip8.last_pressed_key != chip8.pressed_keys) {
+                uint16_t diff = chip8.last_pressed_key ^ chip8.pressed_keys; // touches touchées depuis le dernier appel
+                if (chip8.pressed_keys_since == 0) {
+                    chip8.pressed_keys_since = diff;
+                    chip8.program_counter -= 2;
+                    break;
+                } else if (diff ^ chip8.pressed_keys_since) { // si les touches touchées depuis le dernier appel sont différentes de celles touchées depuis le dernier appel
+                    printf("INPUT DETECTE!!!!\n");
+                    chip8.pressed_keys_since = 0;
+                    chip8.last_pressed_key = 0;
+                } else {
+                    chip8.pressed_keys_since |= diff;
+                    chip8.program_counter -= 2;
+                    break;
+                }
+            }
+            break;
+        case 0x15: // FX15: Sets the delay timer to VX
+            chip8.delay = chip8.V[data.x];
+            break;
+        case 0x18: // FX18: Sets the sound timer to VX
+            chip8.sound = chip8.V[data.x];
+            break;
+        case 0x1E: // FX1E: Adds VX to I. VF is not affected
+            chip8.index_register += chip8.V[data.x];
+            break;
+        case 0x29: // FX29: Sets I to the location of the sprite for the character in VX. Characters 0-F (in hexadecimal) are represented by a 4x5 font
+            chip8.index_register += chip8.V[data.x];
+            break;
+        case 0x33: // FX33: Stores the binary-coded decimal representation of VX, with the hundreds digit in memory at location in I, the tens digit at location I+1, and the ones digit at location I+2
+            chip8.memory[chip8.index_register] = chip8.V[data.x] >= 100 ? (chip8.V[data.x] / 100) % 10 : 0;
+            chip8.memory[chip8.index_register + 1] = chip8.V[data.x] >= 10 ? (chip8.V[data.x] / 10) % 10 : 0;
+            chip8.memory[chip8.index_register + 2] = chip8.V[data.x] % 10;
+            printf("%d = %d, %d, %d\n", chip8.V[data.x], chip8.memory[chip8.index_register], chip8.memory[chip8.index_register + 1], chip8.memory[chip8.index_register + 2]);
+            break;
+        case 0x55: // FX55: Stores from V0 to VX (including VX) in memory, starting at address I. The offset from I is increased by 1 for each value written, but I itself is left unmodified
+            for (size_t i = 0; i <= data.x; i++) {
+                chip8.memory[chip8.index_register + i] = chip8.V[i];
+            }
+            break;
+        case 0x65: // FX65: Fills from V0 to VX (including VX) with values from memory, starting at address I. The offset from I is increased by 1 for each value read, but I itself is left unmodified
+            for (size_t i = 0; chip8.V[i] <= data.x; i++) {
+                chip8.V[i] = chip8.memory[chip8.index_register + i];
+            }        
+            break; 
+        default:
+            errno = EINVAL;
+            fprintf(stderr, "Unknown opcode %04X\n", data.opcode);
+            exit(EXIT_FAILURE);
+            break;
+    }
 }
 
 void execute(nibble data) {
@@ -187,13 +300,17 @@ void execute(nibble data) {
         }
         case 0xE:
             if (data.nn == 0x9E){ // EX9E: Skip next instruction if key with the value of VX is pressed
-                // if (chip8.keypad[chip8.V[data.x]]) {
+                if (chip8.pressed_keys & (1 < chip8.V[data.x]))
                     chip8.program_counter += 2;
-                // }
-            } else if (data.nn == 0xA1) { //EXA1: Skip next instruction if key with the value of VX isn't pressed
-                // if !(chip8.keypad[chip8.V[data.x]]) {
+                }
+            else if (data.nn == 0xA1) { //EXA1: Skip next instruction if key with the value of VX isn't pressed
+                if (!chip8.pressed_keys & (1 < chip8.V[data.x])) {
                     chip8.program_counter += 2;
-                // }
+                }
+            } else {
+                errno = EINVAL;
+                fprintf(stderr, "Unknown opcode %04X\n", data.opcode);
+                exit(EXIT_FAILURE);
             }
             break;
         case 0xF: 
@@ -206,84 +323,5 @@ void execute(nibble data) {
             errno = EINVAL;
             fprintf(stderr, "Unknown opcode %04X\n", data.opcode);
             exit(EXIT_FAILURE);
-    }
-}
-
-void instruction8X(nibble data){
-    switch (data.n) {
-        case 0x0: // 8XY0: Sets VX to the value of VY
-            chip8.V[data.x] = chip8.V[data.y];
-            break;
-        case 0x1: // 8XY1: Sets VX to VX or VY. (bitwise OR operation)
-            chip8.V[data.x] |= chip8.V[data.y];
-            break;
-        case 0x2: // 8XY2: Sets VX to VX and VY. (bitwise AND operation)
-            chip8.V[data.x] &= chip8.V[data.y];
-            break;
-        case 0x3: // 8XY3: Sets VX to VX xor VY
-            chip8.V[data.x] ^= chip8.V[data.y];
-            break;
-        case 0x4: // 8XY4: Adds VY to VX. VF is set to 1 when there's an overflow, and to 0 when there is not
-            chip8.V[0xF] = chip8.V[data.x] + chip8.V[data.y] > 255 ? 1 : 0;
-            chip8.V[data.x] += chip8.V[data.y];
-            break;
-        case 0x5: // 8XY5: VY is subtracted from VX. VF is set to 0 when there's an underflow, and 1 when there is not. (i.e. VF set to 1 if VX >= VY and 0 if not)
-            chip8.V[0xF] = chip8.V[data.x] < chip8.V[data.y] ? 0 : 1;
-            chip8.V[data.x] -= chip8.V[data.y];
-            break;
-        case 0x6: // 8XY6: Stores the least significant bit of VX in VF and then shifts VX to the right by 1
-            chip8.V[0xF] = chip8.V[data.x] & 0x1;
-            chip8.V[data.x] >>= 1;
-            break;
-        case 0x7: // 8XY7: Sets VX to VY minus VX. VF is set to 0 when there's an underflow, and 1 when there is not. (i.e. VF set to 1 if VY >= VX)
-            chip8.V[0xF] = chip8.V[data.x] > chip8.V[data.y] ? 0 : 1;
-            chip8.V[data.x] = chip8.V[data.y] - chip8.V[data.x];
-            break;
-        case 0xE: // 8XYE: Stores the most significant bit of VX in VF and then shifts VX to the left by 1
-            chip8.V[0xF] = chip8.V[data.x] >> 7;
-            chip8.V[data.x] <<= 1;
-            break;
-        default:
-            break;
-        }
-}
-
-void instructionFX (nibble data) {
-    switch (data.nn) {
-        case 0x7: // FX07: Sets VX to the value of the delay timer
-            chip8.V[data.x] = chip8.delay; 
-            break;
-        case 0xA: // FX0A: A key press is awaited, and then stored in VX (blocking operation, all instruction halted until next key event)
-            /* TODO */
-            break;
-        case 0x15: // FX15: Sets the delay timer to VX
-            chip8.delay = chip8.V[data.x];
-            break;
-        case 0x18: // FX18: Sets the sound timer to VX
-            chip8.sound = chip8.V[data.x];
-            break;
-        case 0x1E: // FX1E: Adds VX to I. VF is not affected
-            chip8.index_register += chip8.V[data.x];
-            break;
-        case 0x29: // FX29: Sets I to the location of the sprite for the character in VX. Characters 0-F (in hexadecimal) are represented by a 4x5 font
-            chip8.index_register += chip8.V[data.x];
-            break;
-        case 0x33: // FX33: Stores the binary-coded decimal representation of VX, with the hundreds digit in memory at location in I, the tens digit at location I+1, and the ones digit at location I+2
-            chip8.memory[chip8.index_register] = chip8.V[data.x] / 100;
-            chip8.memory[chip8.index_register + 1] = (chip8.V[data.x] / 10) % 10;
-            chip8.memory[chip8.index_register + 2] = chip8.V[data.x] % 10; 
-            break;
-        case 0x55: // FX55: Stores from V0 to VX (including VX) in memory, starting at address I. The offset from I is increased by 1 for each value written, but I itself is left unmodified
-            for (size_t i = 0; chip8.V[i] != chip8.V[data.x]; i++) {
-                chip8.memory[chip8.index_register + i] = chip8.V[i];
-            }
-            break;
-        case 0x65: // FX65: Fills from V0 to VX (including VX) with values from memory, starting at address I. The offset from I is increased by 1 for each value read, but I itself is left unmodified
-            for (size_t i = 0; chip8.V[i] != chip8.V[data.x]; i++) {
-                chip8.V[chip8.index_register + i] = chip8.memory[chip8.index_register + i];
-            }        
-            break; 
-        default:
-            break;
     }
 }
