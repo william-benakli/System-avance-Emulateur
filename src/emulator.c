@@ -22,6 +22,7 @@ void update(double delta) {
     // update every 1/60th of a second
     if (bufferTime >= 1. / FRAMERATE) {
         bufferTime = 0.0f;
+        clock_timers();
         handleInput();
         refreshFrame();
     }

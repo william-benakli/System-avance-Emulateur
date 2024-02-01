@@ -42,10 +42,11 @@ void initializeChip8();
 void load_rom(char *path);
 void get_display(bool dest[DISPLAY_WIDTH * DISPLAY_HEIGHT]);
 void clock_cycle();
+void clock_timers();
 uint16_t fetch();
 struct nibble decode(uint16_t opcode);
 void execute(struct nibble data);
-void instruction8X(nibble * data);
-void instructionFX(nibble * data);
+void instruction8X(nibble data);
+void instructionFX(nibble data);
 
 #endif
