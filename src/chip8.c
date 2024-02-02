@@ -192,11 +192,12 @@ void execute(nibble data) {
         }
         case 0xE:
             if (data.nn == 0x9E) { // EX9E: Skip next instruction if key with the value of VX is pressed
+                printf("Checking for key %x...", chip8.V[data.x]);
                 if (chip8.pressed_keys & (1 < chip8.V[data.x])) {
-                    printf("Key %d is pressed\n", data.x);
                     chip8.program_counter += 2;
                 }
             } else if (data.nn == 0xA1) { //EXA1: Skip next instruction if key with the value of VX isn't pressed
+                printf("Checking for key %x...", chip8.V[data.x]);
                 if (!chip8.pressed_keys & (1 < chip8.V[data.x])) {
                     chip8.program_counter += 2;
                 }
