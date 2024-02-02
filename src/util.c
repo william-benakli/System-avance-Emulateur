@@ -13,6 +13,12 @@ void get_bits_from_byte(uint8_t byte, bool bits[8]) {
     }
 }
 
+void get_bits_from_2bytes(uint16_t bytes, bool bits[16]) {
+    for (int i = 0; i < 16; i++) {
+        bits[i] = (bytes >> (15 - i)) & 1;
+    }
+}
+
 void printGraphics(bool display[]) {
     char displayStr[DISPLAY_WIDTH * DISPLAY_HEIGHT + DISPLAY_HEIGHT];
     for (size_t i = 0; i < DISPLAY_WIDTH * DISPLAY_HEIGHT; i++) {

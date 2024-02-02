@@ -11,6 +11,8 @@
 
 SDL_Window *window;
 SDL_Renderer *renderer;
+
+// état 
 uint16_t pressed_keys;
 
 void initialize_display() {
@@ -35,7 +37,7 @@ void initialize_display() {
 uint16_t handle_inputs() {
     SDL_Event event;
     if (SDL_PollEvent(&event) == 0) {
-        return 0;
+        return pressed_keys;
     }
     if (event.type == SDL_QUIT) {
         close_display();
@@ -93,9 +95,13 @@ uint16_t handle_inputs() {
                 key_index = 0xF;
                 break;
             default:
-                break;
+                return pressed_keys;
         }
-        pressed_keys |= (event.type == SDL_KEYDOWN ? 1 : 0) << (key_index);
+        if (event.type == SDL_KEYDOWN) {
+            pressed_keys |= 0x01 << key_index;
+        } else if (event.type == SDL_KEYUP) {
+            pressed_keys &= ~(0x01 << key_index);
+        }
     }
     return pressed_keys;
 }

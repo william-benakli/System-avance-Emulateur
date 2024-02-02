@@ -26,8 +26,10 @@ struct Chip8 {
     uint8_t sound; // An 8-bit sound timer which functions like the delay timer, but which also gives off a beeping sound as long as it’s not 0
     uint8_t V[16]; // 16 8-bit (one byte) general-purpose variable registers numbered 0 through F hexadecimal, ie. 0 through 15 in decimal, called V0 through VF
     uint16_t pressed_keys; // 16 keys, which are the hexadecimal digits 0 through F
-    uint16_t last_pressed_key;
-    uint16_t pressed_keys_since;
+
+    uint16_t buffer16;
+    bool bufferBool;
+
 };
 
 struct nibble {

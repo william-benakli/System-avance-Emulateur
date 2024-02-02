@@ -105,10 +105,6 @@ nibble decode(uint16_t opcode) {
     return data;
 }
 
-void instruction8X(nibble data){
-
-}
-
 void execute(nibble data) {
     // printf("Handling opcode: %04X...\n", data.opcode);
     switch (data.t) {
@@ -216,27 +212,14 @@ void execute(nibble data) {
                     chip8.V[data.x] = chip8.delay; 
                     break;
                 case 0x0A: // FX0A: A key press is awaited, and then stored in VX (blocking operation, all instruction halted until next key event)
-                    if (chip8.last_pressed_key == 0 && chip8.pressed_keys != 0) { // on enregistre le dernier état des touches
-                        printf("Detection d'input...\n");
-                        chip8.last_pressed_key = chip8.pressed_keys;
-                        chip8.pressed_keys_since = 0;
-                        chip8.program_counter -= 2;
-                        break;
-                    } else if (chip8.last_pressed_key != chip8.pressed_keys) {
-                        uint16_t diff = chip8.last_pressed_key ^ chip8.pressed_keys; // touches touchées depuis le dernier appel
-                        if (chip8.pressed_keys_since == 0) {
-                            chip8.pressed_keys_since = diff;
-                            chip8.program_counter -= 2;
-                            break;
-                        } else if (diff ^ chip8.pressed_keys_since) { // si les touches touchées depuis le dernier appel sont différentes de celles touchées depuis le dernier appel
-                            printf("INPUT DETECTE!!!!\n");
-                            chip8.pressed_keys_since = 0;
-                            chip8.last_pressed_key = 0;
-                        } else {
-                            chip8.pressed_keys_since |= diff;
-                            chip8.program_counter -= 2;
-                            break;
-                        }
+                    chip8.program_counter -= 2; // action par défaut : répéter
+                    if (!chip8.buffer16) {
+                        chip8.buffer16 = chip8.pressed_keys;
+                    } else if (chip8.buffer16 & (chip8.pressed_keys ^ chip8.buffer16)) {
+                        chip8.program_counter += 2;
+                        chip8.buffer16 = 0;
+                    } else {
+                        chip8.buffer16 |= chip8.pressed_keys;
                     }
                     break;
                 case 0x15: // FX15: Sets the delay timer to VX
