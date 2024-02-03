@@ -16,6 +16,13 @@
 #define CLOCK_SPEED 500 // 500 Hz
 #define FRAMERATE 60 // 60 Hz
 
+struct ChipSettings {
+    bool cosmac_vip_behaviour; // FX0A: On the original COSMAC VIP, the key was only registered when it was pressed and then released
+    bool chip_48_behaviour; // Starting with CHIP-48 and SUPER-CHIP, it was (probably unintentionally) changed to work as BXNN: It will jump to the address XNN, plus the value in the register VX. So the instruction B220 will jump to address 220 plus the value in the register V2.
+    bool super_chip_behaviour; // Starting with CHIP-48 and SUPER-CHIP, it was (probably unintentionally) changed to work as BXNN: It will jump to the address XNN, plus the value in the register VX. So the instruction B220 will jump to address 220 plus the value in the register V2.
+    bool amiga_behaviour; // apparently the CHIP-8 interpreter for Amiga behaved this way. At least one known game, Spacefight 2091!, relies on this behavior. I don’t know of any games that rely on this not happening, so perhaps it’s safe to do it like the Amiga interpreter did.
+};
+
 struct Chip8 {
     uint8_t memory[MEMORY_SIZE]; // Memory: CHIP-8 has direct access to up to 4 kilobytes of RAM
     bool display[DISPLAY_WIDTH * DISPLAY_HEIGHT]; // Display: 64 x 32 pixels (or 128 x 64 for SUPER-CHIP) monochrome, ie. black or white
@@ -26,10 +33,9 @@ struct Chip8 {
     uint8_t sound; // An 8-bit sound timer which functions like the delay timer, but which also gives off a beeping sound as long as it’s not 0
     uint8_t V[16]; // 16 8-bit (one byte) general-purpose variable registers numbered 0 through F hexadecimal, ie. 0 through 15 in decimal, called V0 through VF
     uint16_t pressed_keys; // 16 keys, which are the hexadecimal digits 0 through F
+    struct ChipSettings settings;
 
     uint16_t buffer16;
-    bool bufferBool;
-
 };
 
 struct nibble {

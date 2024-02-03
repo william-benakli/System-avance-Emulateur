@@ -4,7 +4,7 @@
 
 #define WINDOW_NAME "CHIP-8 Emulator"
 
-#define SCALING 4
+#define SCALING 12
 
 #define PRIMARY_COLOR 255, 255, 255, 255 
 #define SECONDARY_COLOR 0, 0, 0, 255
@@ -110,8 +110,6 @@ void refresh_frame() {
     bool display[DISPLAY_WIDTH * DISPLAY_HEIGHT * SCALING];
     get_display(display);
 
-    SDL_SetWindowSize(window, DISPLAY_WIDTH * SCALING, DISPLAY_HEIGHT * SCALING);
-    
     if (SDL_SetRenderDrawColor(renderer, SECONDARY_COLOR) != 0) {
         fprintf(stderr, "Erreur SDL_SetRenderDrawColor : %s", SDL_GetError());
         close_display();

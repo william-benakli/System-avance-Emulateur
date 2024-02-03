@@ -21,14 +21,14 @@ void update(double delta) {
     bufferTime2 += delta;
     // update every 1/60th of a second
     if (bufferTime >= 1. / FRAMERATE) {
-        bufferTime = 0.0f;
+        bufferTime -= 1. / FRAMERATE;
         clock_timers();
         set_pressed_keys(handle_inputs());
         refresh_frame();
     }
     // update every 1/500th of a second
     if (bufferTime2 >= 1. / CLOCK_SPEED) {
-        bufferTime2 = 0.0f;
+        bufferTime2 -= 1. / CLOCK_SPEED;
         clock_cycle();
     }
 }
