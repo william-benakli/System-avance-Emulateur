@@ -146,11 +146,13 @@ void close_display() {
 }
 
 void my_audio_callback(void *userdata, Uint8 *stream, int len) {
-    // Envoyez les données dans notre buffer...
-    int samples = len / sizeof(float); // 4096
-
-    for (auto i = 0; i < samples; i++)
-    {
-        reinterpret_cast<float*>(stream)[i] = 0.5 * SDL_sinf(2 * M_PI * i / 1000);
+	if (audio_len == 0) {
+		return;
     }
+	
+	len = len > audio_len ? audio_len : len;
+	SDL_MixAudioFormat(stream, audio_buf, format, len, SDL_MIX_MAXVOLUME);
+
+	audio_buf += len;
+	audio_len -= len;
 }
