@@ -12,6 +12,9 @@
 
 struct Chip8 chip8;
 
+bool is_key_pressed(bool keys[16]);
+uint8_t get_pressed_key(bool keys[16]);
+
 void initialize_chip8() {
     uint8_t font[5 * 16] = {
         0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
@@ -34,8 +37,8 @@ void initialize_chip8() {
     memcpy(&chip8.memory[FONT_START], font, sizeof(font));
     stack_init(&chip8.stack);
     srand(time(NULL));
-    chip8.settings.cosmac_vip_behaviour = false;
-    chip8.settings.chip_48_behaviour = true;
+    chip8.settings.cosmac_vip_behaviour = true;
+    chip8.settings.chip_48_behaviour = false;
     chip8.settings.super_chip_behaviour = false;
 }
 
@@ -69,8 +72,14 @@ void get_display(bool dest[DISPLAY_WIDTH * DISPLAY_HEIGHT]) {
     memcpy(dest, chip8.display, sizeof(chip8.display));
 }
 
-void set_pressed_keys(uint16_t keys) {
-    chip8.pressed_keys = keys;
+uint8_t get_sound_delay() {
+    return chip8.sound;
+}
+
+void set_pressed_keys(bool keys[16]) {
+    for (size_t i = 0; i < 16; i++) {
+        chip8.pressed_keys[i] = keys[i];
+    }
 }
 
 void clock_cycle() {
@@ -161,39 +170,58 @@ void execute(nibble data) {
                     break;
                 case 0x1: // 8XY1: Sets VX to VX or VY. (bitwise OR operation)
                     chip8.V[data.x] |= chip8.V[data.y];
+                    if (chip8.settings.cosmac_vip_behaviour) {
+                        chip8.V[0xF] = 0;
+                    }
                     break;
                 case 0x2: // 8XY2: Sets VX to VX and VY. (bitwise AND operation)
                     chip8.V[data.x] &= chip8.V[data.y];
+                    if (chip8.settings.cosmac_vip_behaviour) {
+                        chip8.V[0xF] = 0;
+                    }
                     break;
                 case 0x3: // 8XY3: Sets VX to VX xor VY
                     chip8.V[data.x] ^= chip8.V[data.y];
+                    if (chip8.settings.cosmac_vip_behaviour) {
+                        chip8.V[0xF] = 0;
+                    }
                     break;
-                case 0x4: // 8XY4: Adds VY to VX. VF is set to 1 when there's an overflow, and to 0 when there is not
-                    chip8.V[0xF] = chip8.V[data.x] + chip8.V[data.y] > 255 ? 1 : 0;
+                case 0x4: { // 8XY4: Adds VY to VX. VF is set to 1 when there's an overflow, and to 0 when there is not
+                    bool overflow = chip8.V[data.x] + chip8.V[data.y] > 255;
                     chip8.V[data.x] += chip8.V[data.y];
+                    chip8.V[0xF] = overflow;
                     break;
-                case 0x5: // 8XY5: VY is subtracted from VX. VF is set to 0 when there's an underflow, and 1 when there is not (i.e. VF set to 1 if VX >= VY and 0 if not)
-                    chip8.V[0xF] = chip8.V[data.x] >= chip8.V[data.y] ? 1 : 0;
+                }
+                case 0x5: { // 8XY5: VY is subtracted from VX. VF is set to 0 when there's an underflow, and 1 when there is not (i.e. VF set to 1 if VX >= VY and 0 if not)
+                    bool underflow = chip8.V[data.x] < chip8.V[data.y];
                     chip8.V[data.x] -= chip8.V[data.y];
+                    chip8.V[0xF] = underflow ? 0 : 1;
                     break;
-                case 0x6: // 8XY6: Stores the least significant bit of VX in VF and then shifts VX to the right by 1
+                }
+                case 0x6: { // 8XY6: Stores the least significant bit of VX in VF and then shifts VX to the right by 1
                     if (chip8.settings.cosmac_vip_behaviour) {
                         chip8.V[data.x] = chip8.V[data.y];
                     }
-                    chip8.V[0xF] = chip8.V[data.x] & 0x1; // Set VF to 1 if the bit that was shifted out was 1, or 0 if it was 0
+                    uint8_t shifted_out = chip8.V[data.x] & 0x1;
                     chip8.V[data.x] >>= 1; // Shift the value of VX one bit to the right
+                    chip8.V[0xF] = shifted_out; // Set VF to 1 if the bit that was shifted out was 1, or 0 if it was 0
                     break;
-                case 0x7: // 8XY7: Sets VX to VY minus VX. VF is set to 0 when there's an underflow, and 1 when there is not. (i.e. VF set to 1 if VY >= VX)
-                    chip8.V[0xF] = chip8.V[data.y] >= chip8.V[data.x] ? 1 : 0;
+                }
+                case 0x7: { // 8XY7: Sets VX to VY minus VX. VF is set to 0 when there's an underflow, and 1 when there is not. (i.e. VF set to 1 if VY >= VX)
+                    bool underflow = chip8.V[data.y] < chip8.V[data.x];
                     chip8.V[data.x] = chip8.V[data.y] - chip8.V[data.x];
+                    chip8.V[0xF] = underflow ? 0 : 1;
                     break;
-                case 0xE: // 8XYE: Stores the most significant bit of VX in VF and then shifts VX to the left by 1
+                }
+                case 0xE: { // 8XYE: Stores the most significant bit of VX in VF and then shifts VX to the left by 1
                     if (chip8.settings.cosmac_vip_behaviour) {
                         chip8.V[data.x] = chip8.V[data.y];
                     }
-                    chip8.V[0xF] = chip8.V[data.x] >> 7;
+                    uint8_t shifted_out = (chip8.V[data.x] >> 7) & 0x1;
                     chip8.V[data.x] <<= 1;
+                    chip8.V[0xF] = shifted_out;
                     break;
+                }
                 default:
                     errno = EINVAL;
                     fprintf(stderr, "Unknown opcode %04X\n", data.opcode);
@@ -247,12 +275,11 @@ void execute(nibble data) {
         }
         case 0xE:
             if (data.nn == 0x9E) { // EX9E: Skip next instruction if key with the value of VX is pressed
-                if (chip8.pressed_keys & (1 < chip8.V[data.x])) {
-                    printf("Key %x was pressed!\n", chip8.V[data.x]);
+                if (chip8.pressed_keys[chip8.V[data.x]]) {
                     chip8.program_counter += 2;
                 }
             } else if (data.nn == 0xA1) { // EXA1: Skip next instruction if key with the value of VX isn't pressed
-                if (!(chip8.pressed_keys & (1 < chip8.V[data.x]))) {
+                if (!chip8.pressed_keys[chip8.V[data.x]]) {
                     chip8.program_counter += 2;
                 }
             } else {
@@ -269,28 +296,32 @@ void execute(nibble data) {
                 case 0x0A: // FX0A: A key press is awaited, and then stored in VX (blocking operation, all instruction halted until next key event)
                     chip8.program_counter -= 2; // default behaviour: repeat the action
                     if (chip8.settings.cosmac_vip_behaviour) {  // On the original COSMAC VIP, the key was only registered when it was pressed and then released.
-                        uint16_t key_up = chip8.buffer16 & (chip8.pressed_keys ^ chip8.buffer16);
-                        if (!chip8.buffer16) {
-                            chip8.buffer16 = chip8.pressed_keys;
-                            break;
-                        } else if (key_up) {
-                            chip8.program_counter += 2;
-                            chip8.buffer16 = 0;
-                            uint16_t key = 0;
-                            while (!(key_up & (0x01 << key))) {
-                                key++;
+                        bool key_up[16];
+                        for (size_t i = 0; i < 16; i++) { // Store the keys that were released
+                            key_up[i] = chip8.buffer[i] && !chip8.pressed_keys[i];
+                        }
+                        if (!is_key_pressed(chip8.buffer)) { // If no key were pressed to begin with, store pressed keys and wait
+                            // chip8.buffer = chip8.pressed_keys;
+                            for (size_t i = 0; i < 16; i++) {
+                                chip8.buffer[i] = chip8.pressed_keys[i];
                             }
+                            break;
+                        } else if (is_key_pressed(key_up)) {
+                            chip8.program_counter += 2;
+                            for (size_t i = 0; i < 16; i++) {
+                                chip8.buffer[i] = false;
+                            }
+                            uint8_t key = get_pressed_key(key_up);
                             chip8.V[data.x] = key;
                         } else {
-                            chip8.buffer16 |= chip8.pressed_keys;
+                            // chip8.buffer16 |= chip8.pressed_keys;
+                            for (size_t i = 0; i < 16; i++) {
+                                chip8.buffer[i] = chip8.buffer[i] || chip8.pressed_keys[i];
+                            }
                         }
                     } else if (chip8.pressed_keys) { // Just wait for a key to be pressed
                         chip8.program_counter += 2;
-                        uint16_t key = 0;
-                        while (!(chip8.pressed_keys & (0x01 << key))) {
-                            key++;
-                        }
-                        printf("Key pressed: %x, recognized as %x\n", chip8.pressed_keys, key);
+                        uint8_t key = get_pressed_key(chip8.pressed_keys);
                         chip8.V[data.x] = key;
                     }
                     break;
@@ -345,4 +376,22 @@ void execute(nibble data) {
             fprintf(stderr, "Unknown opcode %04X\n", data.opcode);
             exit(EXIT_FAILURE);
     }
+}
+
+bool is_key_pressed(bool keys[16]) {
+    for (size_t i = 0; i < 16; i++) {
+        if (keys[i]) {
+            return true;
+        }
+    }
+    return false;
+}
+
+uint8_t get_pressed_key(bool keys[16]) {
+    for (size_t i = 0; i < 16; i++) {
+        if (keys[i]) {
+            return i;
+        }
+    }
+    return 0xFF;
 }

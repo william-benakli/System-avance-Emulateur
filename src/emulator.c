@@ -8,47 +8,67 @@
 #include <string.h>
 #include <time.h>
 
-double bufferTime = 0.0f;
-double bufferTime2 = 0.0f;
+bool running = true;
 
 void signalHandler(int signal) {
-    close_display();
-    exit(EXIT_SUCCESS);
+    running = false;
 }
 
-void update(double delta) {
+struct timespec diff(struct timespec start, struct timespec end) {
+    struct timespec time_diff;
+    if (end.tv_nsec - start.tv_nsec < 0)  {
+        time_diff.tv_sec = end.tv_sec - start.tv_sec - 1;
+        time_diff.tv_nsec = 1000000000 + end.tv_nsec - start.tv_nsec;
+    } else {
+        time_diff.tv_sec = end.tv_sec - start.tv_sec;
+        time_diff.tv_nsec = end.tv_nsec - start.tv_nsec;
+    }
+    return time_diff;
+}
+
+long double timespec_to_s(struct timespec time) {
+    return time.tv_sec + time.tv_nsec * 1e-9;
+}
+
+void update(long double delta) {
+    static long double bufferTime, bufferTime2;
     bufferTime += delta;
     bufferTime2 += delta;
-    // update every 1/60th of a second
-    if (bufferTime >= 1. / FRAMERATE) {
-        bufferTime -= 1. / FRAMERATE;
-        clock_timers();
-        set_pressed_keys(handle_inputs());
-        refresh_frame();
-    }
-    // update every 1/500th of a second
-    if (bufferTime2 >= 1. / CLOCK_SPEED) {
-        bufferTime2 -= 1. / CLOCK_SPEED;
+    if (bufferTime >= 1. / CLOCK_SPEED) { // update every 1/500th of a second
+        bufferTime -= 1. / CLOCK_SPEED;
         clock_cycle();
+    }
+    if (bufferTime2 >= 1. / FRAMERATE) { // update every 1/60th of a second
+        bufferTime2 -= 1. / FRAMERATE;
+        static bool keys[16];
+        clock_timers();
+        handle_inputs(keys);
+        set_pressed_keys(keys);
+        handle_sound(get_sound_delay());
+        refresh_frame();
     }
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char* argv[]) {
     if (argc != 2) {
         printf("Usage: %s <rom>\n", argv[0]);
         return EXIT_FAILURE;
     }
     initialize_chip8();
-    initialize_display();
+    if (initialize_display(&running) == -1) {
+        return EXIT_FAILURE;
+    }
     signal(SIGINT, signalHandler);
     load_rom(argv[1]);
-    float delta = 0.0;
-    while (true) {
-        struct timespec start, end;
-        clock_gettime(4, &start);
+    struct timespec now;
+    clock_gettime(CLOCK_MONOTONIC, &now);
+    while (running) {
+        struct timespec last = now;
+        clock_gettime(CLOCK_MONOTONIC, &now);
+        struct timespec diff_time = diff(last, now);
+        long double delta = timespec_to_s(diff_time);
         update(delta);
-        clock_gettime(4, &end);
-        delta = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1000000000.0;
     }
+    close_display();
     return EXIT_SUCCESS;
 }

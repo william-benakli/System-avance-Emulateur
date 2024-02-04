@@ -13,8 +13,8 @@
 #define FONT_START 0x50
 #define ROM_START 0x200
 
-#define CLOCK_SPEED 500 // 500 Hz
-#define FRAMERATE 60 // 60 Hz
+#define CLOCK_SPEED 500.0 // 500 Hz
+#define FRAMERATE 60.0 // 60 Hz
 
 struct ChipSettings {
     bool cosmac_vip_behaviour; // FX0A: On the original COSMAC VIP, the key was only registered when it was pressed and then released
@@ -32,10 +32,11 @@ struct Chip8 {
     uint8_t delay; // An 8-bit delay timer which is decremented at a rate of 60 Hz (60 times per second) until it reaches 0
     uint8_t sound; // An 8-bit sound timer which functions like the delay timer, but which also gives off a beeping sound as long as it’s not 0
     uint8_t V[16]; // 16 8-bit (one byte) general-purpose variable registers numbered 0 through F hexadecimal, ie. 0 through 15 in decimal, called V0 through VF
-    uint16_t pressed_keys; // 16 keys, which are the hexadecimal digits 0 through F
-    struct ChipSettings settings;
 
-    uint16_t buffer16;
+    bool pressed_keys[16]; // 16 keys, which are the hexadecimal digits 0 through F
+    bool buffer[16];
+
+    struct ChipSettings settings;
 };
 
 struct nibble {
@@ -52,7 +53,8 @@ typedef struct nibble nibble;
 void initialize_chip8();
 void load_rom(char *path);
 void get_display(bool dest[DISPLAY_WIDTH * DISPLAY_HEIGHT]);
-void set_pressed_keys(uint16_t keys);
+uint8_t get_sound_delay();
+void set_pressed_keys(bool keys[16]);
 void clock_cycle();
 void clock_timers();
 uint16_t fetch();
