@@ -1,4 +1,3 @@
-#include "disassembler.h"
 #include "chip8.h"
 
 #include <fcntl.h>
@@ -7,6 +6,13 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
+
+#define DIR "disassembled_roms/"
+
+void file_stem(char *dest, char *src);
+void rom_filename_to_asm_filename(char *dest, char *rom_filename);
+void log_op(nibble data, int fd, int offset);
+int main(int argc, char **argv);
 
 void file_stem(char *dest, char *src) {
     int filename_len = strlen(src);
@@ -36,28 +42,28 @@ void rom_filename_to_asm_filename(char *dest, char *rom_filename) {
 void log_op(nibble data, int fd, int offset) {
     dprintf(fd, "%04X\t", offset + ROM_START);
     switch (data.t) {
-        case 0x0:
-            if (data.nnn == 0x0E0) {
-                dprintf(fd, "CLEAR_SCREEN\n");
-                return;
-            }
-        case 0x1: // 1NNN: Jump
-            dprintf(fd, "JUMP %02X\n", data.nnn);
+    case 0x0:
+        if (data.nnn == 0x0E0) {
+            dprintf(fd, "CLEAR_SCREEN\n");
             return;
-        case 0x6: // 6XNN: Set VX to NN
-            dprintf(fd, "SET V%x, %x\n", data.x, data.nn);
-            return;
-        case 0x7: // 7XNN: Add NN to VX
-            dprintf(fd, "ADD V%x, %x\n", data.x, data.nn);
-            return;
-        case 0xA: // ANNN: Set I to NNN
-            dprintf(fd, "SET I, %x\n", data.nnn);
-            return;
-        case 0xD: // DXYN: Draw sprite
-            dprintf(fd, "DRAW V%x, V%x, %x\n", data.x, data.y, data.n);
-            return;
-        default:
-            break;
+        }
+    case 0x1: // 1NNN: Jump
+        dprintf(fd, "JUMP %02X\n", data.nnn);
+        return;
+    case 0x6: // 6XNN: Set VX to NN
+        dprintf(fd, "SET V%x, %x\n", data.x, data.nn);
+        return;
+    case 0x7: // 7XNN: Add NN to VX
+        dprintf(fd, "ADD V%x, %x\n", data.x, data.nn);
+        return;
+    case 0xA: // ANNN: Set I to NNN
+        dprintf(fd, "SET I, %x\n", data.nnn);
+        return;
+    case 0xD: // DXYN: Draw sprite
+        dprintf(fd, "DRAW V%x, V%x, %x\n", data.x, data.y, data.n);
+        return;
+    default:
+        break;
     }
 
     dprintf(fd, "Unknown opcode: %04X\n", data.opcode);

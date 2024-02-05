@@ -11,3 +11,11 @@ Pour lancer le projet :
 
 Pour obtenir la version desassemblée d'une rom :
 ```./bin/disassembler <nom du fichier>```
+
+# Liens intéressants
+* Analyse extrêmement détaillée de l'interpréteur Chip-8 dans le Cosmac VIP. : https://www.laurencescotford.net/2020/07/25/chip-8-on-the-cosmac-vip-instruction-index/
+* https://github.com/Timendus/chip8-test-suite
+
+# TODO
+
+cycle de l'instruction DRAW et FX0A

@@ -1,4 +1,3 @@
-#include "emulator.h"
 #include "chip8.h"
 #include "display.h"
 
@@ -9,6 +8,12 @@
 #include <time.h>
 
 bool running = true;
+
+void signalHandler(int signal);
+struct timespec diff(struct timespec start, struct timespec end);
+long double timespec_to_s(struct timespec time);
+void update(long double delta);
+int main(int argc, char **argv);
 
 void signalHandler(int signal) {
     running = false;
@@ -31,22 +36,8 @@ long double timespec_to_s(struct timespec time) {
 }
 
 void update(long double delta) {
-    static long double bufferTime, bufferTime2;
-    bufferTime += delta;
-    bufferTime2 += delta;
-    if (bufferTime >= 1. / CLOCK_SPEED) { // update every 1/500th of a second
-        bufferTime -= 1. / CLOCK_SPEED;
-        clock_cycle();
-    }
-    if (bufferTime2 >= 1. / FRAMERATE) { // update every 1/60th of a second
-        bufferTime2 -= 1. / FRAMERATE;
-        static bool keys[16];
-        clock_timers();
-        handle_inputs(keys);
-        set_pressed_keys(keys);
-        handle_sound(get_sound_delay());
-        refresh_frame();
-    }
+    update_chip8(delta);
+    update_display(delta);
 }
 
 int main(int argc, char* argv[]) {

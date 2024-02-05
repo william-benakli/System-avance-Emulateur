@@ -2,6 +2,7 @@
 #define CHIP8_H
 
 #include "stack.h"
+#include "quirks.h"
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -13,16 +14,6 @@
 #define FONT_START 0x50
 #define ROM_START 0x200
 
-#define CLOCK_SPEED 500.0 // 500 Hz
-#define FRAMERATE 60.0 // 60 Hz
-
-struct ChipSettings {
-    bool cosmac_vip_behaviour; // FX0A: On the original COSMAC VIP, the key was only registered when it was pressed and then released
-    bool chip_48_behaviour; // Starting with CHIP-48 and SUPER-CHIP, it was (probably unintentionally) changed to work as BXNN: It will jump to the address XNN, plus the value in the register VX. So the instruction B220 will jump to address 220 plus the value in the register V2.
-    bool super_chip_behaviour; // Starting with CHIP-48 and SUPER-CHIP, it was (probably unintentionally) changed to work as BXNN: It will jump to the address XNN, plus the value in the register VX. So the instruction B220 will jump to address 220 plus the value in the register V2.
-    bool amiga_behaviour; // apparently the CHIP-8 interpreter for Amiga behaved this way. At least one known game, Spacefight 2091!, relies on this behavior. I don’t know of any games that rely on this not happening, so perhaps it’s safe to do it like the Amiga interpreter did.
-};
-
 struct Chip8 {
     uint8_t memory[MEMORY_SIZE]; // Memory: CHIP-8 has direct access to up to 4 kilobytes of RAM
     bool display[DISPLAY_WIDTH * DISPLAY_HEIGHT]; // Display: 64 x 32 pixels (or 128 x 64 for SUPER-CHIP) monochrome, ie. black or white
@@ -32,11 +23,12 @@ struct Chip8 {
     uint8_t delay; // An 8-bit delay timer which is decremented at a rate of 60 Hz (60 times per second) until it reaches 0
     uint8_t sound; // An 8-bit sound timer which functions like the delay timer, but which also gives off a beeping sound as long as it’s not 0
     uint8_t V[16]; // 16 8-bit (one byte) general-purpose variable registers numbered 0 through F hexadecimal, ie. 0 through 15 in decimal, called V0 through VF
+    uint16_t cycle; // The cycle counter
 
     bool pressed_keys[16]; // 16 keys, which are the hexadecimal digits 0 through F
     bool buffer[16];
 
-    struct ChipSettings settings;
+    machine_type_t machine;
 };
 
 struct nibble {
@@ -55,8 +47,7 @@ void load_rom(char *path);
 void get_display(bool dest[DISPLAY_WIDTH * DISPLAY_HEIGHT]);
 uint8_t get_sound_delay();
 void set_pressed_keys(bool keys[16]);
-void clock_cycle();
-void clock_timers();
+void update_chip8(long double delta);
 uint16_t fetch();
 struct nibble decode(uint16_t opcode);
 void execute(struct nibble data);
