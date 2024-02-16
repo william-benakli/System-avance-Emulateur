@@ -59,29 +59,29 @@ void initialize_chip8(chip8_t *chip8) {
     srand(time(NULL));
 }
 
-void load_rom(chip8_t *chip8, const char *path) {
+bool load_rom(chip8_t *chip8, const char *path) {
     int fd = open(path, O_RDONLY);
     if (fd == -1) {
         perror("Failed to open rom file");
-        exit(EXIT_FAILURE);
+        return false;
     }
     struct stat st;
     if (fstat(fd, &st) == -1) {
         perror("Failed to stat rom file");
-        exit(EXIT_FAILURE);
+        return false;
     }
 
     if (read(fd, chip8->memory + ROM_START, st.st_size) == -1) {
         perror("Failed to read rom file");
-        exit(EXIT_FAILURE);
+        return false;
     }
     if (close(fd) == -1) {
         perror("Failed to close rom file");
-        exit(EXIT_FAILURE);
+        return false;
     }
 
     chip8->program_counter = ROM_START;
-    printf("Loaded ROM: %s\n", path);
+    return true;
 }
 
 void unload_rom(chip8_t *chip8) {

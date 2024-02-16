@@ -42,7 +42,7 @@ typedef struct nibble {
 } nibble;
 
 void initialize_chip8(chip8_t *chip8);
-void load_rom(chip8_t *chip8, const char *path);
+bool load_rom(chip8_t *chip8, const char *path);
 void unload_rom(chip8_t *chip8);
 void run(chip8_t *chip8, const uint32_t n);
 void update_cycle(chip8_t *chip8);

@@ -6,14 +6,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#ifndef linux
+#include <pthread_time.h>
+#endif
 
 bool running = true;
-
-void signalHandler(int signal);
-struct timespec diff(struct timespec start, struct timespec end);
-long double timespec_to_s(struct timespec time);
-void update(chip8_t *chip8, long double delta);
-int main(int argc, char **argv);
 
 void signalHandler(int signal) {
     running = false;

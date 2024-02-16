@@ -1,6 +1,9 @@
 #include "libretro.h"
-
 #include "chip8.h"
+
+#include <errno.h>
+#include <stdio.h>
+#include <string.h>
 
 chip8_t chip8;
 
@@ -17,7 +20,7 @@ static void keyboard_callback(bool down, unsigned keycode, uint32_t character, u
 
 RETRO_API void retro_set_environment(retro_environment_t cb) {
     environ_cb = cb;
-    bool no_rom = true;
+    bool no_rom = false;
     cb(RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME, &no_rom);
     cb(RETRO_ENVIRONMENT_GET_LOG_INTERFACE, &log_cb);
 }
@@ -59,6 +62,7 @@ RETRO_API void retro_get_system_info(struct retro_system_info *info) {
     info->library_version = "1.0";
     info->need_fullpath = true;
     info->valid_extensions = "ch8|rom";
+    printf("\n[README ENFOIRE] Libretro info\n\n");
 }
 
 RETRO_API void retro_get_system_av_info(struct retro_system_av_info *info) {
@@ -82,6 +86,7 @@ RETRO_API void retro_reset(void) {
 }
 
 RETRO_API void retro_run(void) {
+    printf("\n[README ENFOIRE] Running\n\n");
     // input
     input_poll_cb();
 
@@ -118,14 +123,13 @@ RETRO_API void retro_cheat_set(unsigned index, bool enabled, const char *code) {
 
 RETRO_API bool retro_load_game(const struct retro_game_info *game) {
     if (game == NULL) {
-        return true;
+        return false;
     }
     struct retro_keyboard_callback callback = {
         .callback = keyboard_callback,
     };
     environ_cb(RETRO_ENVIRONMENT_SET_KEYBOARD_CALLBACK, &callback);
-    load_rom(&chip8, game->path);
-    return true;
+    return load_rom(&chip8, game->path);
 }
 
 RETRO_API bool retro_load_game_special(unsigned game_type, const struct retro_game_info *info, size_t num_info) {
@@ -134,6 +138,7 @@ RETRO_API bool retro_load_game_special(unsigned game_type, const struct retro_ga
 
 RETRO_API void retro_unload_game(void) {
     unload_rom(&chip8);
+    printf("\n[README ENFOIRE] Jeu déchargé.\n\n");
 }
 
 RETRO_API unsigned retro_get_region(void) {
