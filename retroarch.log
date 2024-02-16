@@ -1,0 +1,72 @@
+[INFO] [Config]: Looking for config in: "/root/.config/retroarch/retroarch.cfg".
+[INFO] RetroArch 1.17.0 (Git r202402032131~ad8975cb5a)
+[INFO] === Build =======================================
+[INFO] CPU Model Name: AMD Ryzen 7 2700 Eight-Core Processor          
+[INFO] Capabilities: MMX MMXEXT SSE SSE2 SSE3 SSSE3 SSE4 SSE42 AES AVX AVX2 
+[INFO] Version: 1.17.0
+[INFO] Git: r202402032131~ad8975cb5a
+[INFO] Built: Feb  3 2024
+[INFO] =================================================
+[INFO] [Input]: Found input driver: "x".
+[INFO] [Core]: Loading dynamic libretro core from: "bin/libretro.dll"
+[INFO] [Overrides]: Redirecting save file to "/root/.config/retroarch/saves/Chip8/tetris.srm".
+[INFO] [Overrides]: Redirecting save state to "/root/.config/retroarch/states/Chip8/tetris.state".
+[INFO] [Environ]: SET_SUPPORT_NO_GAME: yes.
+[INFO] [Environ]: GET_LOG_INTERFACE.
+[INFO] [Content]: Content loading skipped. Implementation will load it on its own.
+[INFO] [Environ]: SET_KEYBOARD_CALLBACK.
+[INFO] [Replay]: Found last replay slot: #0
+[INFO] [SRAM]: Skipping SRAM load.
+[INFO] [Core]: Version of libretro API: 1, Compiled against API: 1
+[INFO] [Environ]: SET_PIXEL_FORMAT: RGB565.
+[INFO] [Core]: Geometry: 64x32, Aspect: 0.000, FPS: 60.00, Sample rate: 44100.00 Hz.
+[INFO] [Audio]: Set audio input rate to: 44100.00 Hz.
+[INFO] [Video]: Set video size to: 192x96.
+[INFO] [Wayland]: Compositor doesn't support zwp_idle_inhibit_manager_v1 protocol
+[INFO] [Wayland]: Compositor doesn't support zxdg_decoration_manager_v1 protocol
+[INFO] [EGL] Found EGL client version >= 1.5, trying eglGetPlatformDisplay
+[INFO] [EGL]: EGL version: 1.5
+[INFO] [GL]: Found GL context: "wayland".
+[INFO] [GL]: Detecting screen resolution: 2560x1440.
+[INFO] [EGL]: Current context: 0x5571305bc690.
+[INFO] [GL]: Vendor: Microsoft Corporation, Renderer: D3D12 (Radeon RX Vega).
+[INFO] [GL]: Version: 4.2 (Compatibility Profile) Mesa 23.0.4-0ubuntu1~22.04.1.
+[INFO] [GL]: Using resolution 192x96.
+[INFO] [GL]: Default shader backend found: glsl.
+[INFO] [Shader driver]: Using GLSL shader backend.
+[INFO] [GLSL]: Checking GLSL shader support ...
+[WARN] [GL]: Stock GLSL shaders will be used.
+[INFO] [GLSL]: Found GLSL vertex shader.
+[INFO] [GLSL]: Found GLSL fragment shader.
+[INFO] [GLSL]: Linking GLSL program.
+[INFO] [GLSL]: Found GLSL vertex shader.
+[INFO] [GLSL]: Found GLSL fragment shader.
+[INFO] [GLSL]: Linking GLSL program.
+[INFO] [GLSL]: Found GLSL vertex shader.
+[INFO] [GLSL]: Found GLSL fragment shader.
+[INFO] [GLSL]: Linking GLSL program.
+[INFO] [GL]: Using 4 textures.
+[INFO] [GL]: Loaded 1 program(s).
+[INFO] [GL]: Using GL_RGB565 for texture uploads.
+[INFO] [Joypad]: Found joypad driver: "udev".
+[ERROR] [DBus]: Failed to suspend screensaver via DBus.
+[INFO] [Video]: Found display server: "null".
+[INFO] [PulseAudio]: Requested 24576 bytes buffer, got 18432.
+[INFO] [Audio]: Started synchronous audio driver.
+[INFO] [ALSA] Using ALSA version 1.2.6.1
+[INFO] [Microphone]: Initialized microphone driver.
+[INFO] [Display]: Found display driver: "gl".
+[ERROR] [MIDI]: snd_seq_open failed with error -2.
+[ERROR] [MIDI]: Initialization failed.
+[INFO] [Playlist]: Loading history file: "/root/.config/retroarch/content_history.lpl".
+[INFO] [Playlist]: Loading history file: "/root/.config/retroarch/content_music_history.lpl".
+[INFO] [Playlist]: Loading history file: "/root/.config/retroarch/content_video_history.lpl".
+[INFO] [Playlist]: Loading history file: "/root/.config/retroarch/content_image_history.lpl".
+[INFO] [Playlist]: Loading favorites file: "/root/.config/retroarch/content_favorites.lpl".
+[INFO] [Config]: Saved new config to "/root/.config/retroarch/retroarch.cfg".
+[INFO] [Core]: Content ran for a total of: 00 hours, 00 minutes, 06 seconds.
+[INFO] [Core]: Unloading game..
+[INFO] [PulseAudio]: Pausing.
+[INFO] [Core]: Unloading core..
+[INFO] [Core]: Unloading core symbols..
+[INFO] [Video]: Average monitor Hz: 1443.001443 Hz. (463.430 % frame time deviation, based on 2048 last samples).
