@@ -20,9 +20,10 @@ static void keyboard_callback(bool down, unsigned keycode, uint32_t character, u
 
 RETRO_API void retro_set_environment(retro_environment_t cb) {
     environ_cb = cb;
-    bool no_rom = false;
+    bool no_rom = true;
     cb(RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME, &no_rom);
     cb(RETRO_ENVIRONMENT_GET_LOG_INTERFACE, &log_cb);
+    cb(RETRO_ENVIRONMENT_GET_SAVESTATE_CONTEXT, NULL);
 }
 
 RETRO_API void retro_set_video_refresh(retro_video_refresh_t cb) {
@@ -57,12 +58,11 @@ RETRO_API unsigned retro_api_version(void) {
 }
 
 RETRO_API void retro_get_system_info(struct retro_system_info *info) {
-    info->block_extract = false;
+    // info->block_extract = false;
     info->library_name = "Chip8";
     info->library_version = "1.0";
     info->need_fullpath = true;
     info->valid_extensions = "ch8|rom";
-    printf("\n[README ENFOIRE] Libretro info\n\n");
 }
 
 RETRO_API void retro_get_system_av_info(struct retro_system_av_info *info) {
@@ -80,15 +80,41 @@ RETRO_API void retro_get_system_av_info(struct retro_system_av_info *info) {
 }
 
 RETRO_API void retro_set_controller_port_device(unsigned port, unsigned device) {
+    struct retro_input_descriptor desc[16];
+    switch (device) {
+        case RETRO_DEVICE_JOYPAD:
+            desc[0].port = port; desc[0].device = device; desc[0].index = 0; desc[0].id = RETRO_DEVICE_ID_JOYPAD_UP; desc[0].description = "0";
+            desc[1].port = port; desc[1].device = device; desc[1].index = 0; desc[1].id = RETRO_DEVICE_ID_JOYPAD_DOWN; desc[1].description = "1";
+            desc[2].port = port; desc[2].device = device; desc[2].index = 0; desc[2].id = RETRO_DEVICE_ID_JOYPAD_LEFT; desc[2].description = "2";
+            desc[3].port = port; desc[3].device = device; desc[3].index = 0; desc[3].id = RETRO_DEVICE_ID_JOYPAD_RIGHT; desc[3].description = "3";
+            desc[4].port = port; desc[4].device = device; desc[4].index = 0; desc[4].id = RETRO_DEVICE_ID_JOYPAD_A; desc[4].description = "4";
+            desc[5].port = port; desc[5].device = device; desc[5].index = 0; desc[5].id = RETRO_DEVICE_ID_JOYPAD_B; desc[5].description = "5";
+            desc[6].port = port; desc[6].device = device; desc[6].index = 0; desc[6].id = RETRO_DEVICE_ID_JOYPAD_X; desc[6].description = "6";
+            desc[7].port = port; desc[7].device = device; desc[7].index = 0; desc[7].id = RETRO_DEVICE_ID_JOYPAD_Y; desc[7].description = "7";
+            desc[8].port = port; desc[8].device = device; desc[8].index = 0; desc[8].id = RETRO_DEVICE_ID_JOYPAD_L; desc[8].description = "8";
+            desc[9].port = port; desc[9].device = device; desc[9].index = 0; desc[9].id = RETRO_DEVICE_ID_JOYPAD_R; desc[9].description = "9";
+            desc[10].port = port; desc[10].device = device; desc[10].index = 0; desc[10].id = RETRO_DEVICE_ID_JOYPAD_SELECT; desc[10].description = "A";
+            desc[11].port = port; desc[11].device = device; desc[11].index = 0; desc[11].id = RETRO_DEVICE_ID_JOYPAD_START; desc[11].description = "B";
+            desc[12].port = port; desc[12].device = device; desc[12].index = 0; desc[12].id = RETRO_DEVICE_ID_JOYPAD_L2; desc[12].description = "C";
+            desc[13].port = port; desc[13].device = device; desc[13].index = 0; desc[13].id = RETRO_DEVICE_ID_JOYPAD_R2; desc[13].description = "D";
+            desc[14].port = port; desc[14].device = device; desc[14].index = 0; desc[14].id = RETRO_DEVICE_ID_JOYPAD_L3; desc[14].description = "E";
+            desc[15].port = port; desc[15].device = device; desc[15].index = 0; desc[15].id = RETRO_DEVICE_ID_JOYPAD_R3; desc[15].description = "F";
+            break;
+        default: log_cb.log(RETRO_LOG_ERROR, "Invalid device type: %u\n", device);
+    }
+    environ_cb(RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS, &desc);
 }
 
 RETRO_API void retro_reset(void) {
 }
 
 RETRO_API void retro_run(void) {
-    printf("\n[README ENFOIRE] Running\n\n");
     // input
     input_poll_cb();
+    chip8.pressed_keys[0x4] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_X);
+    chip8.pressed_keys[0x5] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT);
+    chip8.pressed_keys[0x6] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_RIGHT);
+    chip8.pressed_keys[0x7] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_DOWN);
 
     // update chip 8
     update_timers(&chip8);
@@ -103,22 +129,34 @@ RETRO_API void retro_run(void) {
 }
 
 RETRO_API size_t retro_serialize_size(void) {
-    return 0;
+    log_cb.log(RETRO_LOG_INFO, "retro_serialize_size\n");
+    return sizeof(chip8_t);
 }
 
 RETRO_API bool retro_serialize(void *data, size_t size) {
-    return false;
+    log_cb.log(RETRO_LOG_INFO, "retro_serialize\n");
+    if (size < sizeof(chip8_t)) {
+        return false;
+    }
+    chip8_t *state = data;
+    *state = chip8;
+    return true;
 }
 
 RETRO_API bool retro_unserialize(const void *data, size_t size) {
-    return false;
+    log_cb.log(RETRO_LOG_INFO, "retro_unserialize\n");
+    if (size < sizeof(chip8_t)) {
+        return false;
+    }
+    const chip8_t *state = data;
+    chip8 = *state;
+    return true;
 }
 
 RETRO_API void retro_cheat_reset(void) {
 }
 
 RETRO_API void retro_cheat_set(unsigned index, bool enabled, const char *code) {
-
 }
 
 RETRO_API bool retro_load_game(const struct retro_game_info *game) {
@@ -129,6 +167,10 @@ RETRO_API bool retro_load_game(const struct retro_game_info *game) {
         .callback = keyboard_callback,
     };
     environ_cb(RETRO_ENVIRONMENT_SET_KEYBOARD_CALLBACK, &callback);
+    {
+        /* data */
+    };
+    
     return load_rom(&chip8, game->path);
 }
 
@@ -138,7 +180,6 @@ RETRO_API bool retro_load_game_special(unsigned game_type, const struct retro_ga
 
 RETRO_API void retro_unload_game(void) {
     unload_rom(&chip8);
-    printf("\n[README ENFOIRE] Jeu déchargé.\n\n");
 }
 
 RETRO_API unsigned retro_get_region(void) {
@@ -146,17 +187,21 @@ RETRO_API unsigned retro_get_region(void) {
 }
 
 RETRO_API void *retro_get_memory_data(unsigned id) {
-    if (id == RETRO_MEMORY_SYSTEM_RAM) {
+    switch (id) {
+    case RETRO_MEMORY_SYSTEM_RAM:
         return chip8.memory;
+    default:
+        return NULL;
     }
-    return NULL;
 }
 
 RETRO_API size_t retro_get_memory_size(unsigned id) {
-    if (id == RETRO_MEMORY_SYSTEM_RAM) {
+    switch (id) {
+    case RETRO_MEMORY_SYSTEM_RAM:
         return MEMORY_SIZE;
+    default:
+        return 0;
     }
-    return 0;
 }
 
 static void keyboard_callback(bool down, unsigned keycode, uint32_t character, uint16_t mod) {
