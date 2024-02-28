@@ -1,21 +1,20 @@
-GCC=gcc
-GCC_WINDOWS=x86_64-w64-mingw32-gcc
-GCC_ANDROID=android/android-ndk-r26c/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang
+CC_LINUX=gcc
+CC_WINDOWS=x86_64-w64-mingw32-gcc
+CC_ANDROID=android/android-ndk-r26c/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang
 COMMON_FLAGS=-g -Wall
 SHARED_FLAGS=-fPIC
 SDL_FLAGS=`sdl2-config --cflags --libs`
 LD_FLAGS=-shared
-INCLUDE_SDL=-I./src/chip8/SDL2/include
 PTHREAD_FLAGS=-pthread
 
+# directories
 SRC=src
-CHIP8DIR=$(SRC)/chip8
-CDP1802DIR=$(SRC)/cdp1802
+CHIP8_SRC_DIR=$(SRC)/chip8
+CDP1802_SRC_DIR=$(SRC)/cdp1802
 BIN=bin
+OBJ=$(BIN)/obj
 
-LIBRETRO_CORE_NAME=
-LINUX_LIBRETRO_CORE_NAME=
-WINDOWS_LIBRETRO_CORE_NAME=
+CORE_NAME=chip8_core
 
 PARENTDIR=@mkdir -p $(@D)
 
@@ -23,83 +22,106 @@ PARENTDIR=@mkdir -p $(@D)
 
 all: linux windows android
 
-linux: $(BIN)/chip8_core_linux.so $(BIN)/emulator $(BIN)/disassembler $(BIN)/cdp1802
+linux: $(BIN)/$(CORE_NAME)_linux.zip $(BIN)/emulator $(BIN)/disassembler $(BIN)/cdp1802
 
-windows: $(BIN)/chip8_core_windows.dll
+windows:$(BIN)/$(CORE_NAME)_windows.zip
 
-android: $(BIN)/chip8_core_android.so
+android: $(BIN)/$(CORE_NAME)_android.zip
 
-$(BIN)/emulator: $(CHIP8DIR)/emulator.c $(CHIP8DIR)/chip8.c $(CHIP8DIR)/stack.c $(CHIP8DIR)/display.c
+.INTERMEDIATE: $(BIN)/libretro.o $(BIN)/chip8.o $(BIN)/stack.o $(BIN)/libretro_windows.o $(BIN)/chip8_windows.o $(BIN)/stack_windows.o $(BIN)/libretro_android.o $(BIN)/chip8_android.o $(BIN)/stack_android.o
+
+$(BIN)/emulator: $(CHIP8_SRC_DIR)/emulator.c $(CHIP8_SRC_DIR)/chip8.c $(CHIP8_SRC_DIR)/stack.c $(CHIP8_SRC_DIR)/display.c
 	$(PARENTDIR)
-	$(GCC) $(COMMON_FLAGS) $(PTHREAD_FLAGS) $^ -o $@ $(SDL_FLAGS)
+	$(CC_LINUX) $(COMMON_FLAGS) $(PTHREAD_FLAGS) $^ -o $@ $(SDL_FLAGS)
 
-$(BIN)/disassembler: $(CHIP8DIR)/disassembler.c $(CHIP8DIR)/chip8.c $(CHIP8DIR)/stack.c
+$(BIN)/disassembler: $(CHIP8_SRC_DIR)/disassembler.c $(CHIP8_SRC_DIR)/chip8.c $(CHIP8_SRC_DIR)/stack.c
 	$(PARENTDIR)
-	$(GCC) $(COMMON_FLAGS) $^ -o $@
+	$(CC_LINUX) $(COMMON_FLAGS) $^ -o $@
 
-$(BIN)/cdp1802: $(CDP1802DIR)/cdp1802.c $(CDP1802DIR)/instructions.c
+$(BIN)/cdp1802: $(CDP1802_SRC_DIR)/cdp1802.c $(CDP1802_SRC_DIR)/instructions.c
 	$(PARENTDIR)
-	$(GCC) $(COMMON_FLAGS) $^ -o $@
+	$(CC_LINUX) $(COMMON_FLAGS) $^ -o $@
 
-$(BIN)/chip8_core_linux.so: $(BIN)/libretro.o $(BIN)/chip8.o $(BIN)/stack.o
+$(BIN)/$(CORE_NAME)_linux.zip: $(BIN)/$(CORE_NAME)_linux.so $(CORE_NAME)_libretro.info
 	$(PARENTDIR)
-	$(GCC) $(COMMON_FLAGS) -o $@ $^ $(LD_FLAGS)
-	rm -rf $^
+	mkdir -p $(basename $@)/cores/ $(basename $@)/info/
+	cp $< $(basename $@)/cores/$(CORE_NAME)_libretro.so
+	cp $(CORE_NAME)_libretro.info $(basename $@)/info/$(CORE_NAME)_libretro.info
+	cd $(basename $@) ; zip -r ../../$@ . *
+	rm -rf $(basename $@)
 
-$(BIN)/libretro.o: $(CHIP8DIR)/libretro.c
+$(BIN)/$(CORE_NAME)_linux.so: $(OBJ)/libretro.o $(OBJ)/chip8.o $(OBJ)/stack.o
 	$(PARENTDIR)
-	$(GCC) $(COMMON_FLAGS) $(SHARED_FLAGS) -c $< -o $@
+	$(CC_LINUX) $(COMMON_FLAGS) -o $@ $^ $(LD_FLAGS)
 
-$(BIN)/chip8.o: $(CHIP8DIR)/chip8.c
+$(OBJ)/libretro.o: $(CHIP8_SRC_DIR)/libretro.c
 	$(PARENTDIR)
-	$(GCC) $(COMMON_FLAGS) $(SHARED_FLAGS) -c $< -o $@
+	$(CC_LINUX) $(COMMON_FLAGS) $(SHARED_FLAGS) -c $< -o $@
 
-$(BIN)/stack.o: $(CHIP8DIR)/stack.c
+$(OBJ)/chip8.o: $(CHIP8_SRC_DIR)/chip8.c
 	$(PARENTDIR)
-	$(GCC) $(COMMON_FLAGS) $(SHARED_FLAGS) -c $< -o $@
+	$(CC_LINUX) $(COMMON_FLAGS) $(SHARED_FLAGS) -c $< -o $@
 
-$(BIN)/disassembler.exe: $(CHIP8DIR)/disassembler.c $(CHIP8DIR)/chip8.c $(CHIP8DIR)/stack.c
+$(OBJ)/stack.o: $(CHIP8_SRC_DIR)/stack.c
 	$(PARENTDIR)
-	$(GCC_WINDOWS) $(COMMON_FLAGS) $^ -o $@
+	$(CC_LINUX) $(COMMON_FLAGS) $(SHARED_FLAGS) -c $< -o $@
 
-$(BIN)/cdp1802.exe: $(CDP1802DIR)/cdp1802.c $(CDP1802DIR)/instructions.c
+$(BIN)/disassembler.exe: $(CHIP8_SRC_DIR)/disassembler.c $(CHIP8_SRC_DIR)/chip8.c $(CHIP8_SRC_DIR)/stack.c
 	$(PARENTDIR)
-	$(GCC_WINDOWS) $(COMMON_FLAGS) $^ -o $@
+	$(CC_WINDOWS) $(COMMON_FLAGS) $^ -o $@
 
-$(BIN)/chip8_core_windows.dll: $(BIN)/libretro_windows.o $(BIN)/chip8_windows.o $(BIN)/stack_windows.o
-	$(GCC_WINDOWS) $(COMMON_FLAGS) -o $@ $^ $(LD_FLAGS)
-	rm -rf $^
-
-$(BIN)/libretro_windows.o: $(CHIP8DIR)/libretro.c
+$(BIN)/cdp1802.exe: $(CDP1802_SRC_DIR)/cdp1802.c $(CDP1802_SRC_DIR)/instructions.c
 	$(PARENTDIR)
-	$(GCC_WINDOWS) $(COMMON_FLAGS) $(SHARED_FLAGS) -c $< -o $@
+	$(CC_WINDOWS) $(COMMON_FLAGS) $^ -o $@
 
-$(BIN)/chip8_windows.o: $(CHIP8DIR)/chip8.c
+$(BIN)/$(CORE_NAME)_windows.zip: $(BIN)/$(CORE_NAME)_windows.dll $(CORE_NAME)_libretro.info
 	$(PARENTDIR)
-	$(GCC_WINDOWS) $(COMMON_FLAGS) $(SHARED_FLAGS) -c $< -o $@
+	mkdir -p $(basename $@)/cores/ $(basename $@)/info/
+	cp $< $(basename $@)/cores/$(CORE_NAME)_libretro.dll
+	cp $(CORE_NAME)_libretro.info $(basename $@)/info/$(CORE_NAME)_libretro.info
+	cd $(basename $@) ; zip -r ../../$@ . *
+	rm -rf $(basename $@)
 
-$(BIN)/stack_windows.o: $(CHIP8DIR)/stack.c
+$(BIN)/chip8_core_windows.dll: $(OBJ)/libretro_windows.o $(OBJ)/chip8_windows.o $(OBJ)/stack_windows.o
+	$(CC_WINDOWS) $(COMMON_FLAGS) -o $@ $^ $(LD_FLAGS)
+
+$(OBJ)/libretro_windows.o: $(CHIP8_SRC_DIR)/libretro.c
 	$(PARENTDIR)
-	$(GCC_WINDOWS) $(COMMON_FLAGS) $(SHARED_FLAGS) -c $< -o $@
+	$(CC_WINDOWS) $(COMMON_FLAGS) $(SHARED_FLAGS) -c $< -o $@
 
-$(BIN)/chip8_core_android.so: $(BIN)/libretro_android.o $(BIN)/chip8_android.o $(BIN)/stack_android.o
-	$(GCC_ANDROID) $(COMMON_FLAGS) -o $@ $^ $(LD_FLAGS)
-	rm -rf $^
-
-$(BIN)/libretro_android.o: $(CHIP8DIR)/libretro.c
+$(OBJ)/chip8_windows.o: $(CHIP8_SRC_DIR)/chip8.c
 	$(PARENTDIR)
-	$(GCC_ANDROID) $(COMMON_FLAGS) $(SHARED_FLAGS) -c $< -o $@
+	$(CC_WINDOWS) $(COMMON_FLAGS) $(SHARED_FLAGS) -c $< -o $@
 
-$(BIN)/chip8_android.o: $(CHIP8DIR)/chip8.c
+$(OBJ)/stack_windows.o: $(CHIP8_SRC_DIR)/stack.c
 	$(PARENTDIR)
-	$(GCC_ANDROID) $(COMMON_FLAGS) $(SHARED_FLAGS) -c $< -o $@
+	$(CC_WINDOWS) $(COMMON_FLAGS) $(SHARED_FLAGS) -c $< -o $@
 
-$(BIN)/stack_android.o: $(CHIP8DIR)/stack.c
+$(BIN)/$(CORE_NAME)_android.zip: $(BIN)/$(CORE_NAME)_android.so $(CORE_NAME)_libretro.info
 	$(PARENTDIR)
-	$(GCC_ANDROID) $(COMMON_FLAGS) $(SHARED_FLAGS) -c $< -o $@
+	mkdir -p $(basename $@)/cores/ $(basename $@)/info/
+	cp $< $(basename $@)/cores/$(CORE_NAME)_libretro.so
+	cp $(CORE_NAME)_libretro.info $(basename $@)/info/$(CORE_NAME)_libretro.info
+	cd $(basename $@) ; zip -r ../../$@ . *
+	rm -rf $(basename $@)
+
+$(BIN)/chip8_core_android.so: $(OBJ)/libretro_android.o $(OBJ)/chip8_android.o $(OBJ)/stack_android.o
+	$(CC_ANDROID) $(COMMON_FLAGS) -o $@ $^ $(LD_FLAGS)
+
+$(OBJ)/libretro_android.o: $(CHIP8_SRC_DIR)/libretro.c
+	$(PARENTDIR)
+	$(CC_ANDROID) $(COMMON_FLAGS) $(SHARED_FLAGS) -c $< -o $@
+
+$(OBJ)/chip8_android.o: $(CHIP8_SRC_DIR)/chip8.c
+	$(PARENTDIR)
+	$(CC_ANDROID) $(COMMON_FLAGS) $(SHARED_FLAGS) -c $< -o $@
+
+$(OBJ)/stack_android.o: $(CHIP8_SRC_DIR)/stack.c
+	$(PARENTDIR)
+	$(CC_ANDROID) $(COMMON_FLAGS) $(SHARED_FLAGS) -c $< -o $@
 
 $(BUILD_DIR):
 	mkdir -p $(BIN)
 
 clean:
-	rm -f $(BIN)/*
+	rm -rf $(BIN)/*

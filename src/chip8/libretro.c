@@ -129,12 +129,10 @@ RETRO_API void retro_run(void) {
 }
 
 RETRO_API size_t retro_serialize_size(void) {
-    log_cb.log(RETRO_LOG_INFO, "retro_serialize_size\n");
     return sizeof(chip8_t);
 }
 
 RETRO_API bool retro_serialize(void *data, size_t size) {
-    log_cb.log(RETRO_LOG_INFO, "retro_serialize\n");
     if (size < sizeof(chip8_t)) {
         return false;
     }
@@ -144,7 +142,6 @@ RETRO_API bool retro_serialize(void *data, size_t size) {
 }
 
 RETRO_API bool retro_unserialize(const void *data, size_t size) {
-    log_cb.log(RETRO_LOG_INFO, "retro_unserialize\n");
     if (size < sizeof(chip8_t)) {
         return false;
     }
