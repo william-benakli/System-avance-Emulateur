@@ -1,5 +1,9 @@
 # System-avance-Emulateur
 
+Collection d'outil liés à l'émulation du système CHIP-8.
+
+
+
 Pour installer les dépendances :
 ```sudo apt install libsdl2-dev```
 

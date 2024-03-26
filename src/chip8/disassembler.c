@@ -41,7 +41,7 @@ void rom_filename_to_asm_filename(char *dest, char *rom_filename) {
 }
 
 int log_op(char* dest, nibble data, int offset) {
-    sprintf(dest, "%04X\t", offset + ROM_START);
+    sprintf(dest, "%04X\t%04X\t", offset + ROM_START, data.opcode);
     char* ptr = dest + strlen(dest);
     switch (data.t) {
     case 0x0:
@@ -140,7 +140,7 @@ int main(int argc, char **argv) {
         perror("Error creating disassembled roms directory");
         return EXIT_FAILURE;
     }
-    int asm_fd = open(asm_filename, O_WRONLY | O_CREAT | O_TRUNC, S_IWUSR);
+    int asm_fd = open(asm_filename, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR);
     if (asm_fd == -1) {
         perror("Error opening log file");
         return EXIT_FAILURE;

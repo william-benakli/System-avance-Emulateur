@@ -16,7 +16,7 @@ retro_input_state_t input_state_cb;
 
 struct retro_log_callback log_cb;
 
-static void keyboard_callback(bool down, unsigned keycode, uint32_t character, uint16_t mod);
+// static void keyboard_callback(bool down, unsigned keycode, uint32_t character, uint16_t mod);
 
 RETRO_API void retro_set_environment(retro_environment_t cb) {
     environ_cb = cb;
@@ -108,26 +108,28 @@ RETRO_API void retro_set_controller_port_device(unsigned port, unsigned device) 
 RETRO_API void retro_reset(void) {
 }
 
+const unsigned MAX_PLAYERS = 2;
 RETRO_API void retro_run(void) {
     // input
     input_poll_cb();
-    chip8.pressed_keys[0x0] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_UP);
-    chip8.pressed_keys[0x1] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_DOWN);
-    chip8.pressed_keys[0x2] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT);
-    chip8.pressed_keys[0x3] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_RIGHT);
-    chip8.pressed_keys[0x4] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_A);
-    chip8.pressed_keys[0x5] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_B);
-    chip8.pressed_keys[0x6] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_X);
-    chip8.pressed_keys[0x7] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_Y);
-    chip8.pressed_keys[0x8] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L);
-    chip8.pressed_keys[0x9] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R);
-    chip8.pressed_keys[0xA] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_SELECT);
-    chip8.pressed_keys[0xB] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_START);
-    chip8.pressed_keys[0xC] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L2);
-    chip8.pressed_keys[0xD] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R2);
-    chip8.pressed_keys[0xE] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L3);
-    chip8.pressed_keys[0xF] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R3);
-
+    for (int i = 0; i < MAX_PLAYERS; i++) {
+        chip8.pressed_keys[0x0] = input_state_cb(i, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_UP);
+        chip8.pressed_keys[0x1] = input_state_cb(i, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_DOWN);
+        chip8.pressed_keys[0x2] = input_state_cb(i, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT);
+        chip8.pressed_keys[0x3] = input_state_cb(i, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_RIGHT);
+        chip8.pressed_keys[0x4] = input_state_cb(i, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_A);
+        chip8.pressed_keys[0x5] = input_state_cb(i, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_B);
+        chip8.pressed_keys[0x6] = input_state_cb(i, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_X);
+        chip8.pressed_keys[0x7] = input_state_cb(i, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_Y);
+        chip8.pressed_keys[0x8] = input_state_cb(i, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L);
+        chip8.pressed_keys[0x9] = input_state_cb(i, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R);
+        chip8.pressed_keys[0xA] = input_state_cb(i, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_SELECT);
+        chip8.pressed_keys[0xB] = input_state_cb(i, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_START);
+        chip8.pressed_keys[0xC] = input_state_cb(i, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L2);
+        chip8.pressed_keys[0xD] = input_state_cb(i, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R2);
+        chip8.pressed_keys[0xE] = input_state_cb(i, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L3);
+        chip8.pressed_keys[0xF] = input_state_cb(i, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R3);
+    }
     // update chip 8
     update_timers(&chip8);
     run(&chip8, 1. / FRAMERATE * chip8.instructions_per_second);
@@ -172,13 +174,13 @@ RETRO_API bool retro_load_game(const struct retro_game_info *game) {
     if (game == NULL) {
         return false;
     }
-    struct retro_keyboard_callback callback = {
-        .callback = keyboard_callback,
-    };
-    environ_cb(RETRO_ENVIRONMENT_SET_KEYBOARD_CALLBACK, &callback);
-    {
+    // struct retro_keyboard_callback callback = {
+    //     .callback = keyboard_callback,
+    // };
+    // environ_cb(RETRO_ENVIRONMENT_SET_KEYBOARD_CALLBACK, &callback);
+    // {
         /* data */
-    };
+    // };
     
     return load_rom(&chip8, game->path);
 }
@@ -213,7 +215,7 @@ RETRO_API size_t retro_get_memory_size(unsigned id) {
     }
 }
 
-static void keyboard_callback(bool down, unsigned keycode, uint32_t character, uint16_t mod) {
+/* static void keyboard_callback(bool down, unsigned keycode, uint32_t character, uint16_t mod) {
     uint8_t index;
     switch (keycode) {
     case RETROK_1: index = 0x1; break;
@@ -235,4 +237,4 @@ static void keyboard_callback(bool down, unsigned keycode, uint32_t character, u
     default: return;
     }
     chip8.pressed_keys[index] = down;
-}
+} */
