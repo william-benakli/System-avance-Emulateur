@@ -47,6 +47,7 @@ int log_op(char* dest, nibble data, int offset) {
     case 0x0:
         if (data.nnn == 0x0E0) return sprintf(ptr, "CLEAR_SCREEN\n"); // 00E0: Clear screen
         else if (data.nnn == 0x0EE) return sprintf(ptr, "RETURN_SUB\n"); // 00EE: Return from subroutine
+        else return sprintf(ptr, "Unknown opcode: %04X\n", data.opcode);
     case 0x1: return sprintf(ptr, "JUMP %03X\n", data.nnn); // 1NNN: Jump
     case 0x2: return sprintf(ptr, "CALL_SUBROUTINE\n"); // 2NNN: Call subroutine
     case 0x3: return sprintf(ptr, "SKIP_IF V%01X == %02X\n", data.x, data.nn); // 3XNN: Skip next instruction if VX == NN
@@ -65,6 +66,7 @@ int log_op(char* dest, nibble data, int offset) {
         case 0x6: return sprintf(ptr, "SET VF, V%X >> 1\n", data.x); // 8XY6: Stores the least significant bit of VX in VF and then shifts VX to the right by 1
         case 0x7: return sprintf(ptr, "SET V%X, V%X - V%X\n", data.x, data.x, data.y); // 8XY7: Sets VX to VY minus VX. VF is set to 0 when there's an underflow, and 1 when there is not. (i.e. VF set to 1 if VY >= VX)
         case 0xE: return sprintf(ptr, "SET VF, V%X << 1\n", data.x); // 8XYE: Stores the most significant bit of VX in VF and then shifts VX to the left by 1
+        default: return sprintf(ptr, "Unknown opcode: %04X\n", data.opcode);
         }
     case 0x9: return sprintf(ptr, "SKIP_IF V%X != V%X\n", data.x, data.y); // 9XY0: Skip next instruction if VX != VY
     case 0xA: return sprintf(ptr, "SET I, %3X\n", data.nnn); // ANNN: Set I to NNN
@@ -74,6 +76,7 @@ int log_op(char* dest, nibble data, int offset) {
     case 0xE:
         if (data.nn == 0x9E) return sprintf(ptr, "SKIP_IF key_V%X_pressed\n", data.x); // EX9E: Skip next instruction if key with the value of VX is pressed
         else if (data.nn == 0xA1) return sprintf(ptr, "SKIP_IF !key_V%X_pressed\n", data.x); // EXA1: Skip next instruction if key with the value of VX isn't pressed
+        else return sprintf(ptr, "Unknown opcode: %04X\n", data.opcode);
     case 0xF:
         switch (data.nn) {
         case 0x07: return sprintf(ptr, "SET V%X, delay_timer\n", data.x); // FX07: Sets VX to the value of the delay timer
@@ -85,6 +88,7 @@ int log_op(char* dest, nibble data, int offset) {
         case 0x33: return sprintf(ptr, "STORE_BCD memory+I, V%X\n", data.x) ; // FX33: Stores the binary-coded decimal representation of VX, with the hundreds digit in memory at location in I, the tens digit at location I+1, and the ones digit at location I+2
         case 0x55: return sprintf(ptr, "STORE memory+I, V0..V%X\n", data.x); // FX55: Stores from V0 to VX (including VX) in memory, starting at address I. The offset from I is increased by 1 for each value written, but I itself is left unmodified
         case 0x65: return sprintf(ptr, "STORE V0..V%X, memory+I\n", data.x);; // FX65: Fills from V0 to VX (including VX) with values from memory, starting at address I. The offset from I is increased by 1 for each value read, but I itself is left unmodified
+        default: return sprintf(ptr, "Unknown opcode: %04X\n", data.opcode);
         }
     }
     return sprintf(ptr, "Unknown opcode: %04X\n", data.opcode);
