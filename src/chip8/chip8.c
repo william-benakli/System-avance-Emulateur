@@ -119,7 +119,6 @@ void update_timers(chip8_t *chip8) {
         chip8->delay--;
     }
     if (chip8->sound > 0) {
-        printf("sound value: %d\n", chip8->sound);
         chip8->sound--;
     }
 }
@@ -164,7 +163,7 @@ void execute(chip8_t *chip8, nibble data) {
     case 0x1: // 1NNN: Jump
         chip8->program_counter = data.nnn;
         break;
-        case 0x2: // 2NNN: Call subroutine
+    case 0x2: // 2NNN: Call subroutine
         stack_push(&chip8->stack, chip8->program_counter);
         chip8->program_counter = data.nnn;
         break; 

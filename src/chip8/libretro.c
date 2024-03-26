@@ -120,7 +120,8 @@ RETRO_API void retro_reset(void) {
 
 RETRO_API void retro_run(void) {
     log_cb.log(RETRO_LOG_INFO, "[CHIP-8] Running frame.\n");
-    // input
+    
+    // polling input
     input_poll_cb();
     chip8.pressed_keys[0x0] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_UP) || input_state_cb(1, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_UP);
     chip8.pressed_keys[0x1] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_DOWN) || input_state_cb(1, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_DOWN);
@@ -139,11 +140,11 @@ RETRO_API void retro_run(void) {
     chip8.pressed_keys[0xE] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L3) || input_state_cb(1, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L3);
     chip8.pressed_keys[0xF] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R3) || input_state_cb(1, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R3);
 
-    // update chip 8
+    // update chip 8 state
     update_timers(&chip8);
     run(&chip8, 1. / FRAMERATE * chip8.instructions_per_second);
 
-    // graphics
+    // traduction des graphismes vers retroarch
     uint16_t buffer[DISPLAY_WIDTH * DISPLAY_HEIGHT];
     for (int i = 0; i < DISPLAY_WIDTH * DISPLAY_HEIGHT; i++) {
         buffer[i] = chip8.display[i] ? 0xFFFF : 0x0000;
