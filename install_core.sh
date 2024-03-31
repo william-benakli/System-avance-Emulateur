@@ -1,1 +1,1 @@
-unzip -o bin/chip8_core_linux.zip -d $1
+unzip -o bin/chip8_core_windows.zip -d $1
